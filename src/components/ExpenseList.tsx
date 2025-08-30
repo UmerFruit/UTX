@@ -19,9 +19,10 @@ import { useToast } from '@/hooks/use-toast';
 interface ExpenseListProps {
   expenses: Expense[];
   categories: Category[];
+  onExpenseChange?: () => void;
 }
 
-export const ExpenseList = ({ expenses, categories }: ExpenseListProps) => {
+export const ExpenseList = ({ expenses, categories, onExpenseChange }: ExpenseListProps) => {
   const { deleteExpense } = useExpenses();
   const { toast } = useToast();
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -41,6 +42,7 @@ export const ExpenseList = ({ expenses, categories }: ExpenseListProps) => {
           title: "Success",
           description: "Expense deleted successfully",
         });
+        onExpenseChange?.();
       }
     }
   };
@@ -120,6 +122,7 @@ export const ExpenseList = ({ expenses, categories }: ExpenseListProps) => {
               expense={editingExpense}
               categories={categories}
               onSuccess={() => setEditingExpense(null)}
+              onExpenseChange={onExpenseChange}
             />
           )}
         </DialogContent>

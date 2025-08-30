@@ -13,9 +13,10 @@ interface EditExpenseFormProps {
   expense: Expense;
   categories: Category[];
   onSuccess: () => void;
+  onExpenseChange?: () => void;
 }
 
-export const EditExpenseForm = ({ expense, categories, onSuccess }: EditExpenseFormProps) => {
+export const EditExpenseForm = ({ expense, categories, onSuccess, onExpenseChange }: EditExpenseFormProps) => {
   const { updateExpense } = useExpenses();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -71,6 +72,7 @@ export const EditExpenseForm = ({ expense, categories, onSuccess }: EditExpenseF
           title: "Success",
           description: "Expense updated successfully",
         });
+        onExpenseChange?.();
         onSuccess();
       }
     } catch (error) {

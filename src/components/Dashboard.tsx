@@ -109,7 +109,13 @@ export const Dashboard = () => {
             Export CSV
           </Button>
           
-          <Dialog open={showAddExpense} onOpenChange={setShowAddExpense}>
+          <Dialog open={showAddExpense} onOpenChange={(open) => {
+            setShowAddExpense(open);
+            if (!open) {
+              // Refresh data when dialog closes
+              refetch();
+            }
+          }}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -122,7 +128,10 @@ export const Dashboard = () => {
               </DialogHeader>
               <AddExpenseForm 
                 categories={categories} 
-                onSuccess={() => setShowAddExpense(false)} 
+                onSuccess={() => {
+                  setShowAddExpense(false);
+                }}
+                onExpenseChange={refetch}
               />
             </DialogContent>
           </Dialog>
@@ -200,7 +209,11 @@ export const Dashboard = () => {
                   <CardDescription>Your latest 5 expenses</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ExpenseList expenses={recentExpenses} categories={categories} />
+                  <ExpenseList 
+                    expenses={recentExpenses} 
+                    categories={categories}
+                    onExpenseChange={refetch}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -212,7 +225,11 @@ export const Dashboard = () => {
                   <CardDescription>Complete list of your expenses</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ExpenseList expenses={expenses} categories={categories} />
+                  <ExpenseList 
+                    expenses={expenses} 
+                    categories={categories}
+                    onExpenseChange={refetch}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

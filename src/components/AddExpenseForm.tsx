@@ -12,9 +12,10 @@ import { Loader2 } from 'lucide-react';
 interface AddExpenseFormProps {
   categories: Category[];
   onSuccess: () => void;
+  onExpenseChange?: () => void;
 }
 
-export const AddExpenseForm = ({ categories, onSuccess }: AddExpenseFormProps) => {
+export const AddExpenseForm = ({ categories, onSuccess, onExpenseChange }: AddExpenseFormProps) => {
   const { addExpense } = useExpenses();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -79,6 +80,7 @@ export const AddExpenseForm = ({ categories, onSuccess }: AddExpenseFormProps) =
           description: '',
         });
         
+        onExpenseChange?.();
         onSuccess();
       }
     } catch (error) {
