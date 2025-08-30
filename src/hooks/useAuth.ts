@@ -29,7 +29,8 @@ export function useAuth() {
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    // Always use production URL for email redirects
+    const redirectUrl = 'https://uttx.vercel.app/';
     
     const { error } = await supabase.auth.signUp({
       email,
