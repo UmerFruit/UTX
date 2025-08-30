@@ -1,5 +1,5 @@
 // Main dashboard component for UTX
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useExpenses } from '@/hooks/useExpenses';
 import { formatCurrency, getCurrentWeekRange, getCurrentMonthRange, isExpenseInRange } from '@/utils/dateUtils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,28 +14,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { exportToCSV } from '@/utils/exportUtils';
 
 export const Dashboard = () => {
-  const { expenses, categories, loading } = useExpenses();
+  const { expenses, categories, loading, refetch } = useExpenses();
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
 
-  // Calculate statistics
-  const weekRange = getCurrentWeekRange();
-  const monthRange = getCurrentMonthRange();
+  // Calculate statistics with memoization for better performance
+  const { weeklyExpenses, monthlyExpenses, weeklyTotal, monthlyTotal, totalExpenses, recentExpenses } = useMemo(() => {
+    const weekRange = getCurrentWeekRange();
+    const monthRange = getCurrentMonthRange();
 
-  const weeklyExpenses = expenses.filter(expense => 
-    isExpenseInRange(expense.date, weekRange.start, weekRange.end)
-  );
-  
-  const monthlyExpenses = expenses.filter(expense => 
-    isExpenseInRange(expense.date, monthRange.start, monthRange.end)
-  );
+    const weeklyExpenses = expenses.filter(expense => 
+      isExpenseInRange(expense.date, weekRange.start, weekRange.end)
+    );
+    
+    const monthlyExpenses = expenses.filter(expense => 
+      isExpenseInRange(expense.date, monthRange.start, monthRange.end)
+    );
 
-  const weeklyTotal = weeklyExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const monthlyTotal = monthlyExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const weeklyTotal = weeklyExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const monthlyTotal = monthlyExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
-  // Get recent expenses (last 5)
-  const recentExpenses = expenses.slice(0, 5);
+    // Get recent expenses (last 5)
+    const recentExpenses = expenses.slice(0, 5);
+
+    return {
+      weeklyExpenses,
+      monthlyExpenses,
+      weeklyTotal,
+      monthlyTotal,
+      totalExpenses,
+      recentExpenses
+    };
+  }, [expenses]);
 
   const handleExportCSV = () => {
     exportToCSV(expenses, 'utx-expenses');
@@ -69,7 +80,13 @@ export const Dashboard = () => {
           <p className="text-muted-foreground">Track your expenses and manage your budget</p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={showCategories} onOpenChange={setShowCategories}>
+          <Dialog open={showCategories} onOpenChange={(open) => {
+            setShowCategories(open);
+            if (!open) {
+              // Refresh data when dialog closes
+              refetch();
+            }
+          }}>
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Calendar className="mr-2 h-4 w-4" />
@@ -80,7 +97,10 @@ export const Dashboard = () => {
               <DialogHeader>
                 <DialogTitle>Manage Categories</DialogTitle>
               </DialogHeader>
-              <CategoryManager categories={categories} />
+              <CategoryManager 
+                categories={categories} 
+                onCategoryChange={refetch}
+              />
             </DialogContent>
           </Dialog>
           

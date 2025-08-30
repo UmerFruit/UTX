@@ -11,6 +11,7 @@ import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
 
 interface CategoryManagerProps {
   categories: Category[];
+  onCategoryChange?: () => void;
 }
 
 const predefinedColors = [
@@ -32,7 +33,7 @@ const predefinedColors = [
   '#6B7280', // Gray
 ];
 
-export const CategoryManager = ({ categories }: CategoryManagerProps) => {
+export const CategoryManager = ({ categories, onCategoryChange }: CategoryManagerProps) => {
   const { addCategory, updateCategory, deleteCategory } = useExpenses();
   const { toast } = useToast();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -69,6 +70,7 @@ export const CategoryManager = ({ categories }: CategoryManagerProps) => {
       });
       setNewCategory({ name: '', color: predefinedColors[0] });
       setShowAddForm(false);
+      onCategoryChange?.();
     }
     setLoading(false);
   };
@@ -98,6 +100,7 @@ export const CategoryManager = ({ categories }: CategoryManagerProps) => {
         description: "Category updated successfully",
       });
       setEditingId(null);
+      onCategoryChange?.();
     }
     setLoading(false);
   };
@@ -117,6 +120,7 @@ export const CategoryManager = ({ categories }: CategoryManagerProps) => {
           title: "Success",
           description: "Category deleted successfully",
         });
+        onCategoryChange?.();
       }
     }
   };

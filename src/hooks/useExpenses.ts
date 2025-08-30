@@ -87,7 +87,7 @@ export function useExpenses() {
       .select();
 
     if (!error && data) {
-      fetchExpenses(); // Refresh the list
+      await fetchExpenses(); // Refresh the list
     }
     
     return { data, error };
@@ -102,7 +102,7 @@ export function useExpenses() {
       .select();
 
     if (!error) {
-      fetchExpenses(); // Refresh the list
+      await fetchExpenses(); // Refresh the list
     }
     
     return { data, error };
@@ -116,7 +116,7 @@ export function useExpenses() {
       .eq('id', id);
 
     if (!error) {
-      fetchExpenses(); // Refresh the list
+      await fetchExpenses(); // Refresh the list
     }
     
     return { error };
@@ -135,7 +135,7 @@ export function useExpenses() {
       .select();
 
     if (!error && data) {
-      fetchCategories(); // Refresh the list
+      await fetchCategories(); // Refresh the list
     }
     
     return { data, error };
@@ -150,8 +150,8 @@ export function useExpenses() {
       .select();
 
     if (!error) {
-      fetchCategories(); // Refresh the list
-      fetchExpenses(); // Refresh expenses to show updated category names
+      await fetchCategories(); // Refresh the list
+      await fetchExpenses(); // Refresh expenses to show updated category names
     }
     
     return { data, error };
@@ -165,8 +165,8 @@ export function useExpenses() {
       .eq('id', id);
 
     if (!error) {
-      fetchCategories(); // Refresh the list
-      fetchExpenses(); // Refresh expenses
+      await fetchCategories(); // Refresh the list
+      await fetchExpenses(); // Refresh expenses
     }
     
     return { error };
