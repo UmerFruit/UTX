@@ -143,14 +143,17 @@ export const AddBudgetForm = ({ onSuccess }: AddBudgetFormProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category (Optional)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select 
+                onValueChange={(value) => field.onChange(value === "all" ? "" : value)} 
+                defaultValue={field.value || "all"}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="All categories" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem value="all">All categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
