@@ -18,7 +18,7 @@ export const CurrencySwitcher = () => {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="PKR">₨ PKR</SelectItem>
+          <SelectItem value="PKR">Rs PKR</SelectItem>
           <SelectItem value="USD">$ USD</SelectItem>
         </SelectContent>
       </Select>
