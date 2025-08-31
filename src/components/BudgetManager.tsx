@@ -11,10 +11,18 @@ import { Plus, TrendingUp, AlertTriangle } from 'lucide-react';
 import { AddBudgetForm } from './AddBudgetForm';
 
 export const BudgetManager = () => {
-  const { budgets, loading } = useBudgets();
+  const { budgets, loading, refetch } = useBudgets();
   const { expenses } = useExpenses();
   const { formatCurrency } = useCurrency();
   const [showAddBudget, setShowAddBudget] = useState(false);
+
+  const handleBudgetCreated = () => {
+    setShowAddBudget(false);
+    // Use setTimeout to ensure the UI state is updated before refetch
+    setTimeout(() => {
+      refetch(); // Explicitly refetch budgets
+    }, 100);
+  };
 
   // Calculate budget progress
   const getBudgetProgress = (budget: any) => {
@@ -77,7 +85,7 @@ export const BudgetManager = () => {
             <DialogHeader>
               <DialogTitle>Create New Budget</DialogTitle>
             </DialogHeader>
-            <AddBudgetForm onSuccess={() => setShowAddBudget(false)} />
+            <AddBudgetForm onSuccess={handleBudgetCreated} />
           </DialogContent>
         </Dialog>
       </div>

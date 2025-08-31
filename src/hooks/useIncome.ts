@@ -48,7 +48,10 @@ export function useIncome() {
       .single();
 
     if (!error) {
-      await fetchIncome();
+      // Ensure the refetch happens after a small delay to prevent race conditions
+      setTimeout(() => {
+        fetchIncome();
+      }, 50);
     }
 
     return { data, error };

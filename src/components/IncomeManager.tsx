@@ -11,9 +11,17 @@ import { AddIncomeForm } from './AddIncomeForm';
 import { IncomeAnalysis } from './IncomeAnalysis';
 
 export const IncomeManager = () => {
-  const { income, loading } = useIncome();
+  const { income, loading, refetch } = useIncome();
   const { formatCurrency } = useCurrency();
   const [showAddIncome, setShowAddIncome] = useState(false);
+
+  const handleIncomeAdded = () => {
+    setShowAddIncome(false);
+    // Use setTimeout to ensure the UI state is updated before refetch
+    setTimeout(() => {
+      refetch(); // Explicitly refetch income
+    }, 100);
+  };
 
   // Calculate income statistics
   const totalIncome = income.reduce((sum, item) => sum + item.amount, 0);
@@ -62,7 +70,7 @@ export const IncomeManager = () => {
             <DialogHeader>
               <DialogTitle>Add New Income</DialogTitle>
             </DialogHeader>
-            <AddIncomeForm onSuccess={() => setShowAddIncome(false)} />
+            <AddIncomeForm onSuccess={handleIncomeAdded} />
           </DialogContent>
         </Dialog>
       </div>
