@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      budgets: {
+        Row: {
+          amount: number
+          category_id: string | null
+          created_at: string
+          end_date: string | null
+          id: string
+          is_active: boolean
+          name: string
+          period: string
+          start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category_id?: string | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          period?: string
+          start_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          period?: string
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budgets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           color: string | null
@@ -78,6 +128,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      income: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          is_recurring: boolean
+          recurring_period: string | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          is_recurring?: boolean
+          recurring_period?: string | null
+          source: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          is_recurring?: boolean
+          recurring_period?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

@@ -4,11 +4,14 @@ import { useExpenses } from '@/hooks/useExpenses';
 import { formatCurrency, getCurrentWeekRange, getCurrentMonthRange, isExpenseInRange } from '@/utils/dateUtils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, TrendingUp, TrendingDown, Calendar, Download } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Calendar, Download, DollarSign, Target, BarChart3 } from 'lucide-react';
 import { ExpenseList } from './ExpenseList';
 import { AddExpenseForm } from './AddExpenseForm';
 import { ExpenseChart } from './ExpenseChart';
 import { CategoryManager } from './CategoryManager';
+import { BudgetManager } from './BudgetManager';
+import { IncomeManager } from './IncomeManager';
+import { CashFlowAnalysis } from './CashFlowAnalysis';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { exportToCSV } from '@/utils/exportUtils';
@@ -194,19 +197,22 @@ export const Dashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Tabs defaultValue="recent" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="recent">Recent Expenses</TabsTrigger>
-              <TabsTrigger value="all">All Expenses</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="recent" className="space-y-4">
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="expenses">Expenses</TabsTrigger>
+          <TabsTrigger value="income">Income</TabsTrigger>
+          <TabsTrigger value="budgets">Budgets</TabsTrigger>
+          <TabsTrigger value="cashflow">Cash Flow</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
                   <CardTitle>Recent Expenses</CardTitle>
-                  <CardDescription>Your latest 5 expenses</CardDescription>
+                  <CardDescription>Your latest expenses</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ExpenseList 
@@ -216,38 +222,50 @@ export const Dashboard = () => {
                   />
                 </CardContent>
               </Card>
-            </TabsContent>
-            
-            <TabsContent value="all" className="space-y-4">
+            </div>
+
+            <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>All Expenses</CardTitle>
-                  <CardDescription>Complete list of your expenses</CardDescription>
+                  <CardTitle>Spending by Category</CardTitle>
+                  <CardDescription>This month's breakdown</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ExpenseList 
-                    expenses={expenses} 
-                    categories={categories}
-                    onExpenseChange={refetch}
-                  />
+                  <ExpenseChart expenses={monthlyExpenses} categories={categories} />
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <div className="space-y-6">
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="expenses" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Spending by Category</CardTitle>
-              <CardDescription>Visual breakdown of your expenses</CardDescription>
+              <CardTitle>All Expenses</CardTitle>
+              <CardDescription>Complete list of your expenses</CardDescription>
             </CardHeader>
             <CardContent>
-              <ExpenseChart expenses={monthlyExpenses} categories={categories} />
+              <ExpenseList 
+                expenses={expenses} 
+                categories={categories}
+                onExpenseChange={refetch}
+              />
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="income" className="space-y-4">
+          <IncomeManager />
+        </TabsContent>
+
+        <TabsContent value="budgets" className="space-y-4">
+          <BudgetManager />
+        </TabsContent>
+
+        <TabsContent value="cashflow" className="space-y-4">
+          <CashFlowAnalysis />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
