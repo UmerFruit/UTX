@@ -20,11 +20,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { exportToCSV } from '@/utils/exportUtils';
 
 export const Dashboard = () => {
-  const { expenses, categories, loading, refetch } = useExpenses();
-  const { income } = useIncome();
+  const { expenses, categories, loading, refetch: refetchExpenses } = useExpenses();
+  const { income, refetch: refetchIncome } = useIncome();
   const { formatCurrency } = useCurrency();
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
+
+  const handleExpenseAdded = () => {
+    setShowAddExpense(false);
+    // Use setTimeout to ensure the UI state is updated before refetch
+    setTimeout(() => {
+      refetchExpenses(); // Explicitly refetch expenses
+    }, 100);
+  };
 
   // Calculate statistics with memoization for better performance
   const { weeklyExpenses, monthlyExpenses, weeklyTotal, monthlyTotal, totalExpenses, recentExpenses, monthlyIncome, weeklyIncome, netMonthlyFlow } = useMemo(() => {
@@ -109,7 +117,7 @@ export const Dashboard = () => {
             setShowCategories(open);
             if (!open) {
               // Refresh data when dialog closes
-              refetch();
+              refetchExpenses();
             }
           }}>
             <DialogTrigger asChild>
@@ -124,7 +132,7 @@ export const Dashboard = () => {
               </DialogHeader>
               <CategoryManager 
                 categories={categories} 
-                onCategoryChange={refetch}
+                onCategoryChange={refetchExpenses}
               />
             </DialogContent>
           </Dialog>
@@ -138,7 +146,7 @@ export const Dashboard = () => {
             setShowAddExpense(open);
             if (!open) {
               // Refresh data when dialog closes
-              refetch();
+              refetchExpenses();
             }
           }}>
             <DialogTrigger asChild>
@@ -153,10 +161,8 @@ export const Dashboard = () => {
               </DialogHeader>
               <AddExpenseForm 
                 categories={categories} 
-                onSuccess={() => {
-                  setShowAddExpense(false);
-                }}
-                onExpenseChange={refetch}
+                onSuccess={handleExpenseAdded}
+                onExpenseChange={refetchExpenses}
               />
             </DialogContent>
           </Dialog>
@@ -256,7 +262,7 @@ export const Dashboard = () => {
                   <ExpenseList 
                     expenses={recentExpenses} 
                     categories={categories}
-                    onExpenseChange={refetch}
+                    onExpenseChange={refetchExpenses}
                   />
                 </CardContent>
               </Card>
@@ -286,7 +292,7 @@ export const Dashboard = () => {
               <ExpenseList 
                 expenses={expenses} 
                 categories={categories}
-                onExpenseChange={refetch}
+                onExpenseChange={refetchExpenses}
               />
             </CardContent>
           </Card>

@@ -61,7 +61,10 @@ export function useBudgets() {
       .single();
 
     if (!error) {
-      await fetchBudgets();
+      // Ensure the refetch happens after a small delay to prevent race conditions
+      setTimeout(() => {
+        fetchBudgets();
+      }, 50);
     }
 
     return { data, error };
