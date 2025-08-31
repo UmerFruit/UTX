@@ -64,19 +64,19 @@ export const ExpenseList = ({ expenses, categories, onExpenseChange }: ExpenseLi
         {expenses.map((expense) => (
           <div
             key={expense.id}
-            className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+            className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors space-y-2 sm:space-y-0"
           >
             <div className="flex-1">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <div
-                  className="w-3 h-3 rounded-full"
+                  className="w-3 h-3 rounded-full flex-shrink-0"
                   style={{ backgroundColor: expense.categories?.color || '#6B7280' }}
                 />
-                <div>
-                  <p className="font-medium">{expense.description || 'No description'}</p>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm sm:text-base truncate">{expense.description || 'No description'}</p>
+                  <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-2 text-xs sm:text-sm text-muted-foreground">
                     <span>{formatDate(expense.date)}</span>
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-xs w-fit">
                       {expense.categories?.name || 'Unknown'}
                     </Badge>
                   </div>
@@ -84,8 +84,8 @@ export const ExpenseList = ({ expenses, categories, onExpenseChange }: ExpenseLi
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              <span className="font-semibold text-lg">
+            <div className="flex items-center justify-between sm:justify-end gap-3">
+              <span className="font-semibold text-lg sm:text-lg">
                 {formatCurrency(expense.amount)}
               </span>
               
@@ -115,7 +115,7 @@ export const ExpenseList = ({ expenses, categories, onExpenseChange }: ExpenseLi
       </div>
 
       <Dialog open={!!editingExpense} onOpenChange={() => setEditingExpense(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Expense</DialogTitle>
           </DialogHeader>

@@ -105,14 +105,14 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Track your expenses and manage your budget</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Track your expenses and manage your budget</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Dialog open={showCategories} onOpenChange={(open) => {
             setShowCategories(open);
             if (!open) {
@@ -121,12 +121,13 @@ export const Dashboard = () => {
             }
           }}>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <Calendar className="mr-2 h-4 w-4" />
-                Categories
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                <Calendar className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">Categories</span>
+                <span className="xs:hidden">Cat.</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Manage Categories</DialogTitle>
               </DialogHeader>
@@ -137,9 +138,10 @@ export const Dashboard = () => {
             </DialogContent>
           </Dialog>
           
-          <Button variant="outline" onClick={handleExportCSV}>
-            <Download className="mr-2 h-4 w-4" />
-            Export CSV
+          <Button variant="outline" size="sm" onClick={handleExportCSV} className="flex-1 sm:flex-none">
+            <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">Export CSV</span>
+            <span className="xs:hidden">Export</span>
           </Button>
           
           <Dialog open={showAddExpense} onOpenChange={(open) => {
@@ -150,12 +152,13 @@ export const Dashboard = () => {
             }
           }}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Expense
+              <Button size="sm" className="flex-1 sm:flex-none">
+                <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">Add Expense</span>
+                <span className="xs:hidden">Add</span>
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Expense</DialogTitle>
               </DialogHeader>
@@ -170,40 +173,40 @@ export const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-        <Card>
+      <div className="grid gap-3 sm:gap-6 grid-cols-1 xs:grid-cols-2 lg:grid-cols-5">
+        <Card className="xs:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Monthly Income</CardTitle>
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(monthlyIncome)}</div>
+            <div className="text-lg sm:text-2xl font-bold text-green-600">{formatCurrency(monthlyIncome)}</div>
             <p className="text-xs text-muted-foreground">
               This month
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="xs:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Monthly Expenses</CardTitle>
+            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{formatCurrency(monthlyTotal)}</div>
+            <div className="text-lg sm:text-2xl font-bold text-red-600">{formatCurrency(monthlyTotal)}</div>
             <p className="text-xs text-muted-foreground">
               {monthlyExpenses.length} expense{monthlyExpenses.length !== 1 ? 's' : ''}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="xs:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Cash Flow</CardTitle>
-            <DollarSign className={`h-4 w-4 ${netMonthlyFlow >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+            <CardTitle className="text-xs sm:text-sm font-medium">Net Cash Flow</CardTitle>
+            <DollarSign className={`h-3 w-3 sm:h-4 sm:w-4 ${netMonthlyFlow >= 0 ? 'text-green-600' : 'text-red-600'}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${netMonthlyFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-lg sm:text-2xl font-bold ${netMonthlyFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {netMonthlyFlow >= 0 ? '+' : ''}{formatCurrency(netMonthlyFlow)}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -214,11 +217,11 @@ export const Dashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Week</CardTitle>
-            <Calendar className="h-4 w-4 text-primary" />
+            <CardTitle className="text-xs sm:text-sm font-medium">This Week</CardTitle>
+            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(weeklyTotal)}</div>
+            <div className="text-lg sm:text-2xl font-bold">{formatCurrency(weeklyTotal)}</div>
             <p className="text-xs text-muted-foreground">
               {weeklyExpenses.length} expense{weeklyExpenses.length !== 1 ? 's' : ''}
             </p>
@@ -227,11 +230,11 @@ export const Dashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Categories</CardTitle>
-            <Plus className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Categories</CardTitle>
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{categories.length}</div>
+            <div className="text-lg sm:text-2xl font-bold">{categories.length}</div>
             <p className="text-xs text-muted-foreground">
               Active categories
             </p>
@@ -240,22 +243,24 @@ export const Dashboard = () => {
       </div>
 
       {/* Main Content */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="expenses">Expenses</TabsTrigger>
-          <TabsTrigger value="income">Income</TabsTrigger>
-          <TabsTrigger value="budgets">Budgets</TabsTrigger>
-          <TabsTrigger value="cashflow">Cash Flow</TabsTrigger>
-          <TabsTrigger value="breakdown">Monthly</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+        <div className="overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 min-w-max sm:min-w-0">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="expenses" className="text-xs sm:text-sm">Expenses</TabsTrigger>
+            <TabsTrigger value="income" className="text-xs sm:text-sm">Income</TabsTrigger>
+            <TabsTrigger value="budgets" className="text-xs sm:text-sm">Budgets</TabsTrigger>
+            <TabsTrigger value="cashflow" className="text-xs sm:text-sm">Cash Flow</TabsTrigger>
+            <TabsTrigger value="breakdown" className="text-xs sm:text-sm">Monthly</TabsTrigger>
+          </TabsList>
+        </div>
         
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-3">
+        <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+          <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Expenses</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Recent Expenses</CardTitle>
                   <CardDescription>Your latest expenses</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -268,10 +273,10 @@ export const Dashboard = () => {
               </Card>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Spending by Category</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Spending by Category</CardTitle>
                   <CardDescription>This month's breakdown</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -285,7 +290,7 @@ export const Dashboard = () => {
         <TabsContent value="expenses" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>All Expenses</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">All Expenses</CardTitle>
               <CardDescription>Complete list of your expenses</CardDescription>
             </CardHeader>
             <CardContent>

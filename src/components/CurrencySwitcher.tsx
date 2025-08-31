@@ -11,10 +11,10 @@ export const CurrencySwitcher = () => {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <DollarSign className="h-4 w-4 text-muted-foreground" />
+    <div className="flex items-center gap-1 sm:gap-2">
+      <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
       <Select value={currency} onValueChange={handleCurrencyChange}>
-        <SelectTrigger className="w-20">
+        <SelectTrigger className="w-16 sm:w-20 text-xs sm:text-sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
