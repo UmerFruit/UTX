@@ -1,5 +1,5 @@
 // Authentication page for UTX
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,143 +9,112 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, DollarSign, AlertCircle } from 'lucide-react';
+import { Loader2, DollarSign } from 'lucide-react';
 
 const Auth = () => {
-  const { user, loading, initialized, signIn, signUp } = useAuth();
+  const { user, loading, signIn, signUp } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
   
   // Form states
   const [signInData, setSignInData] = useState({ email: '', password: '' });
   const [signUpData, setSignUpData] = useState({ email: '', password: '', confirmPassword: '' });
 
-  // Ensure component is mounted before showing content
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Show loading until component is mounted and auth is loaded
-  if (!mounted || loading || !initialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="absolute top-4 right-4">
-          <ThemeToggle />
-        </div>
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">
-            {!mounted ? 'Initializing...' : 'Loading authentication...'}
-          </p>
-        </div>
-      </div>
-    );
+  // Redirect if already authenticated
+  if (!loading && user) {
+    return <Navigate to="/" replace />;
   }
 
-  // Redirect if already authenticated
-  if (user) {
-    return <Navigate to="/" replace />;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      if (!signInData.email || !signInData.password) {
-        toast({
-          title: "Error",
-          description: "Please fill in all fields",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await signIn(signInData.email, signInData.password);
-      
-      if (error) {
-        toast({
-          title: "Sign in failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
-        });
-      }
-    } catch (error) {
+    if (!signInData.email || !signInData.password) {
       toast({
-        title: "Unexpected error",
-        description: "Something went wrong. Please try again.",
+        title: "Error",
+        description: "Please fill in all fields",
         variant: "destructive",
       });
-      console.error('Sign in error:', error);
-    } finally {
       setIsLoading(false);
+      return;
     }
+
+    const { error } = await signIn(signInData.email, signInData.password);
+    
+    if (error) {
+      toast({
+        title: "Sign in failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
+    }
+    
+    setIsLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      if (!signUpData.email || !signUpData.password || !signUpData.confirmPassword) {
-        toast({
-          title: "Error",
-          description: "Please fill in all fields",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (signUpData.password !== signUpData.confirmPassword) {
-        toast({
-          title: "Error",
-          description: "Passwords do not match",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (signUpData.password.length < 6) {
-        toast({
-          title: "Error",
-          description: "Password must be at least 6 characters long",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await signUp(signUpData.email, signUpData.password);
-      
-      if (error) {
-        toast({
-          title: "Sign up failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account.",
-        });
-        // Clear form on success
-        setSignUpData({ email: '', password: '', confirmPassword: '' });
-      }
-    } catch (error) {
+    if (!signUpData.email || !signUpData.password || !signUpData.confirmPassword) {
       toast({
-        title: "Unexpected error",
-        description: "Something went wrong. Please try again.",
+        title: "Error",
+        description: "Please fill in all fields",
         variant: "destructive",
       });
-      console.error('Sign up error:', error);
-    } finally {
       setIsLoading(false);
+      return;
     }
+
+    if (signUpData.password !== signUpData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    if (signUpData.password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    const { error } = await signUp(signUpData.email, signUpData.password);
+    
+    if (error) {
+      toast({
+        title: "Sign up failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Account created!",
+        description: "Please check your email to verify your account.",
+      });
+    }
+    
+    setIsLoading(false);
   };
 
   return (

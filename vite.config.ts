@@ -8,6 +8,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    // This ensures client-side routing works in development
+    fs: {
+      strict: false
+    }
+  },
+  preview: {
+    port: 8080,
   },
   plugins: [
     react(),
@@ -19,4 +26,12 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // This should handle SPA routing
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
+  }
 }));

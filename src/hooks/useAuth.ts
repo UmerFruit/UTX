@@ -7,106 +7,58 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        // Get current session first
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-        }
-
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setInitialized(true);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        if (mounted) {
-          setLoading(false);
-          setInitialized(true);
-        }
-      }
-    };
-
-    // Set up auth state listener
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          // Only set loading to false if we've initialized
-          if (initialized) {
-            setLoading(false);
-          }
-        }
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
       }
     );
 
-    // Initialize auth
-    initializeAuth();
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [initialized]);
+    return () => subscription.unsubscribe();
+  }, []);
 
   const signUp = async (email: string, password: string) => {
-    try {
-      // Always use production URL for email redirects
-      const redirectUrl = 'https://uttx.vercel.app/';
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl
-        }
-      });
-      return { error };
-    } catch (error) {
-      console.error('Sign up error:', error);
-      return { error: error as Error };
-    }
+    // Always use production URL for email redirects
+    const redirectUrl = 'https://uttx.vercel.app/';
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl
+      }
+    });
+    return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      return { error };
-    } catch (error) {
-      console.error('Sign in error:', error);
-      return { error: error as Error };
-    }
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { error };
   };
 
   const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      return { error };
-    } catch (error) {
-      console.error('Sign out error:', error);
-      return { error: error as Error };
-    }
+    const { error } = await supabase.auth.signOut();
+    return { error };
   };
 
   return {
     user,
     session,
     loading,
-    initialized,
     signUp,
     signIn,
     signOut,
