@@ -52,7 +52,6 @@ export const BudgetManager = () => {
 
   // Calculate budget progress
   const getBudgetProgress = (budget: any) => {
-    const now = new Date();
     const startDate = new Date(budget.start_date);
     const endDate = budget.end_date ? new Date(budget.end_date) : null;
 
