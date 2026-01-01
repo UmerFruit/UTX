@@ -30,7 +30,33 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: undefined
+        manualChunks: {
+          // Core React libraries
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // UI framework chunks
+          'vendor-radix': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-checkbox',
+            '@radix-ui/react-label',
+            '@radix-ui/react-progress',
+            '@radix-ui/react-slot',
+          ],
+          // Charts library (large)
+          'vendor-charts': ['recharts'],
+          // Supabase client
+          'vendor-supabase': ['@supabase/supabase-js'],
+          // PDF parsing (only loaded when needed)
+          'vendor-pdf': ['pdfjs-dist'],
+          // Date utilities
+          'vendor-date': ['date-fns'],
+          // Query client
+          'vendor-query': ['@tanstack/react-query'],
+        }
       }
     }
   },

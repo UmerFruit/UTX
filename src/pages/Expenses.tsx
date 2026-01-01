@@ -7,9 +7,10 @@ import { useExpenses } from '@/hooks/useExpenses';
 import { Card, CardContent} from '@/components/ui/card';
 import { ExpenseList } from '@/components/ExpenseList';
 import { Button } from '@/components/ui/button';
-import { Plus,Loader2 } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AddExpenseForm } from '@/components/AddExpenseForm';
+import { ImportTransactions } from '@/components/ImportTransactions';
 import { useState } from 'react';
 
 const Expenses = () => {
@@ -74,6 +75,10 @@ const Expenses = () => {
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Expenses</h1>
               </div>
               <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                <ImportTransactions
+                  categories={categories}
+                  onImportComplete={refetchExpenses}
+                />
                 <Dialog open={showAddExpense} onOpenChange={(open) => {
                   setShowAddExpense(open);
                   if (!open) {
