@@ -46,7 +46,6 @@ const Income = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Income</h1>
-                <p className="text-sm sm:text-base text-muted-foreground">Track and manage your income sources</p>
               </div>
               <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                 <Dialog open={showAddIncome} onOpenChange={(open) => {

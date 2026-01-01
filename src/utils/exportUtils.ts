@@ -29,6 +29,6 @@ export const exportToCSV = (expenses: Expense[], filename: string = 'expenses') 
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    link.remove();
   }
 };

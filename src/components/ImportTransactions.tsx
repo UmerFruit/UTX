@@ -16,7 +16,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/hooks/useExpenses';
 import { parseBankPDF, parseCSVFile, ParsedTransaction, convertToImportFormat, ImportTransaction } from '@/utils/pdfParser';
 import { formatCurrency } from '@/utils/dateUtils';
-import { Upload, FileText, Loader2, CheckCircle2, XCircle, AlertCircle, Trash2 } from 'lucide-react';
+import { cleanDescriptionsWithGroq } from '@/utils/groqCleaner';
+import { Upload, FileText, Loader2, CheckCircle2, XCircle, AlertCircle, Trash2, Sparkles } from 'lucide-react';
 
 interface ImportTransactionsProps {
   categories: Category[];
@@ -36,6 +37,7 @@ export const ImportTransactions = ({ categories, onImportComplete }: ImportTrans
   
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCleaning, setIsCleaning] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [preview, setPreview] = useState<PreviewTransaction[]>([]);
@@ -45,6 +47,31 @@ export const ImportTransactions = ({ categories, onImportComplete }: ImportTrans
   // Filter categories for expenses and income
   const expenseCategories = categories.filter(cat => !cat.type || cat.type === 'expense' || cat.type === 'both');
   const incomeCategories = categories.filter(cat => !cat.type || cat.type === 'income' || cat.type === 'both');
+
+  const cleanDescriptionsWithAI = async (transactions: PreviewTransaction[]) => {
+    setIsCleaning(true);
+    try {
+      const descriptions = transactions.map(t => t.originalDescription);
+      const cleanedDescriptions = await cleanDescriptionsWithGroq(descriptions);
+      
+      // Update preview with cleaned descriptions
+      return transactions.map((t, index) => ({
+        ...t,
+        description: cleanedDescriptions[index] || t.description,
+      }));
+    } catch (error) {
+      console.error('AI cleaning error:', error);
+      toast({
+        title: 'AI Cleaning Failed',
+        description: error instanceof Error ? error.message : 'Failed to clean descriptions with AI',
+        variant: 'destructive',
+      });
+      // Return original transactions if cleaning fails
+      return transactions;
+    } finally {
+      setIsCleaning(false);
+    }
+  };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -77,18 +104,25 @@ export const ImportTransactions = ({ categories, onImportComplete }: ImportTrans
 
       // Convert to preview format with unique IDs
       const importTransactions = convertToImportFormat(parsedTransactions);
-      const previewData: PreviewTransaction[] = importTransactions.map((t, index) => ({
+      let previewData: PreviewTransaction[] = importTransactions.map((t, index) => ({
         ...t,
         id: `import-${index}-${Date.now()}`,
         selected: true,
         originalDescription: parsedTransactions[index].description || 'No description',
       }));
 
+      // Always apply AI cleaning following main.js pipeline
+      toast({
+        title: 'Cleaning Descriptions...',
+        description: 'AI is enhancing transaction descriptions. This may take a moment.',
+      });
+      previewData = await cleanDescriptionsWithAI(previewData);
+
       setPreview(previewData);
       
       toast({
         title: 'File Parsed Successfully',
-        description: `Found ${parsedTransactions.length} transactions ready for import.`,
+        description: `Found ${parsedTransactions.length} transactions ready for import. AI cleaning applied.`,
       });
     } catch (error) {
       console.error('Parse error:', error);
@@ -127,106 +161,64 @@ export const ImportTransactions = ({ categories, onImportComplete }: ImportTrans
     setPreview(prev => prev.filter(t => t.id !== id));
   };
 
-  const handleImport = async () => {
+  const validateImport = () => {
     if (!user) {
       toast({
         title: 'Authentication Required',
         description: 'Please sign in to import transactions.',
         variant: 'destructive',
       });
-      return;
+      return false;
     }
 
     const selectedTransactions = preview.filter(t => t.selected);
-    
+
     if (selectedTransactions.length === 0) {
       toast({
         title: 'No Transactions Selected',
         description: 'Please select at least one transaction to import.',
         variant: 'destructive',
       });
-      return;
+      return false;
     }
 
-    setIsImporting(true);
-    setImportProgress(0);
+    return selectedTransactions;
+  };
 
+  const importBatch = async (records: any[], tableName: 'expenses' | 'income', totalTransactions: number, processedRef: { current: number }) => {
     let successCount = 0;
     let failCount = 0;
 
-    // Split transactions by type
-    const expenses = selectedTransactions.filter(t => t.type === 'expense');
-    const income = selectedTransactions.filter(t => t.type === 'income');
+    const batchSize = 50;
+    for (let i = 0; i < records.length; i += batchSize) {
+      const batch = records.slice(i, i + batchSize);
+      const { error } = await supabase.from(tableName).insert(batch);
 
-    const totalTransactions = selectedTransactions.length;
-    let processed = 0;
-
-    // Import expenses in batches
-    if (expenses.length > 0) {
-      const expenseRecords = expenses.map(t => ({
-        amount: t.amount,
-        category_id: t.category_id,
-        date: t.date,
-        description: t.description || 'Imported from bank statement',
-        user_id: user.id,
-      }));
-
-      // Insert in batches of 50
-      const batchSize = 50;
-      for (let i = 0; i < expenseRecords.length; i += batchSize) {
-        const batch = expenseRecords.slice(i, i + batchSize);
-        const { error } = await supabase.from('expenses').insert(batch);
-        
-        if (error) {
-          console.error('Expense insert error:', error);
-          failCount += batch.length;
-        } else {
-          successCount += batch.length;
-        }
-        
-        processed += batch.length;
-        setImportProgress(Math.round((processed / totalTransactions) * 100));
+      if (error) {
+        console.error(`${tableName} insert error:`, error);
+        failCount += batch.length;
+      } else {
+        successCount += batch.length;
       }
+
+      processedRef.current += batch.length;
+      setImportProgress(Math.round((processedRef.current / totalTransactions) * 100));
     }
 
-    // Import income in batches
-    if (income.length > 0) {
-      const incomeRecords = income.map(t => ({
-        amount: t.amount,
-        category_id: t.category_id,
-        date: t.date,
-        description: t.description || 'Imported from bank statement',
-        user_id: user.id,
-        is_recurring: false,
-        recurring_period: null,
-      }));
+    return { successCount, failCount };
+  };
 
-      const batchSize = 50;
-      for (let i = 0; i < incomeRecords.length; i += batchSize) {
-        const batch = incomeRecords.slice(i, i + batchSize);
-        const { error } = await supabase.from('income').insert(batch);
-        
-        if (error) {
-          console.error('Income insert error:', error);
-          failCount += batch.length;
-        } else {
-          successCount += batch.length;
-        }
-        
-        processed += batch.length;
-        setImportProgress(Math.round((processed / totalTransactions) * 100));
-      }
-    }
-
+  const handleImportResult = (successCount: number, failCount: number) => {
     setImportStats({ success: successCount, failed: failCount });
     setIsImporting(false);
 
     if (successCount > 0) {
+      const description = `Successfully imported ${successCount} transaction${successCount === 1 ? '' : 's'}` + (failCount > 0 ? `, ${failCount} failed` : '');
       toast({
         title: 'Import Complete',
-        description: `Successfully imported ${successCount} transaction${successCount !== 1 ? 's' : ''}.${failCount > 0 ? ` ${failCount} failed.` : ''}`,
+        description,
       });
-      
+
       // Clear preview after successful import
       setPreview([]);
       setFileName('');
@@ -238,6 +230,83 @@ export const ImportTransactions = ({ categories, onImportComplete }: ImportTrans
         variant: 'destructive',
       });
     }
+  };
+
+  const handleImport = async () => {
+    const selectedTransactions = validateImport();
+    if (!selectedTransactions) return;
+
+    setIsImporting(true);
+    setImportProgress(0);
+
+    // Split transactions by type
+    const expenses = selectedTransactions.filter(t => t.type === 'expense');
+    const income = selectedTransactions.filter(t => t.type === 'income');
+
+    const totalTransactions = selectedTransactions.length;
+    const processedRef = { current: 0 };
+
+    let totalSuccess = 0;
+    let totalFail = 0;
+
+    // Import expenses
+    if (expenses.length > 0) {
+      const expenseRecords = expenses.map(t => ({
+        amount: t.amount,
+        category_id: t.category_id,
+        date: t.date,
+        description: t.description || 'Imported from bank statement',
+        user_id: user.id,
+      }));
+
+      const { successCount, failCount } = await importBatch(expenseRecords, 'expenses', totalTransactions, processedRef);
+      totalSuccess += successCount;
+      totalFail += failCount;
+    }
+
+    // Import income
+    if (income.length > 0) {
+      const incomeRecords = income.map(t => ({
+        amount: t.amount,
+        category_id: t.category_id,
+        date: t.date,
+        description: t.description || 'Imported from bank statement',
+        user_id: user.id,
+        is_recurring: false,
+        recurring_period: null,
+      }));
+
+      const { successCount, failCount } = await importBatch(incomeRecords, 'income', totalTransactions, processedRef);
+      totalSuccess += successCount;
+      totalFail += failCount;
+    }
+
+    handleImportResult(totalSuccess, totalFail);
+  };
+
+  const getButtonContent = () => {
+    if (isLoading) {
+      return (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Parsing...
+        </>
+      );
+    }
+    if (isCleaning) {
+      return (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Cleaning...
+        </>
+      );
+    }
+    return (
+      <>
+        <Upload className="mr-2 h-4 w-4" />
+        Select File
+      </>
+    );
   };
 
   const resetImport = () => {
@@ -275,53 +344,45 @@ export const ImportTransactions = ({ categories, onImportComplete }: ImportTrans
           {/* File Upload Section */}
           <Card>
             <CardContent className="pt-4">
-              <div className="flex flex-col sm:flex-row gap-4 items-center">
-                <div className="flex-1 w-full">
-                  <Label htmlFor="file-upload" className="sr-only">Upload File</Label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      ref={fileInputRef}
-                      id="file-upload"
-                      type="file"
-                      accept=".pdf,.csv"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      disabled={isLoading || isImporting}
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isLoading || isImporting}
-                      className="w-full sm:w-auto"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Parsing...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="mr-2 h-4 w-4" />
-                          Select File
-                        </>
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                  <div className="flex-1 w-full">
+                    <Label htmlFor="file-upload" className="sr-only">Upload File</Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={fileInputRef}
+                        id="file-upload"
+                        type="file"
+                        accept=".pdf,.csv"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        disabled={isLoading || isImporting || isCleaning}
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isLoading || isImporting || isCleaning}
+                        className="w-full sm:w-auto"
+                      >
+                        {getButtonContent()}
+                      </Button>
+                      {fileName && (
+                        <span className="text-sm text-muted-foreground truncate max-w-[200px]">
+                          {fileName}
+                        </span>
                       )}
-                    </Button>
-                    {fileName && (
-                      <span className="text-sm text-muted-foreground truncate max-w-[200px]">
-                        {fileName}
-                      </span>
-                    )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Supported formats: PDF (bank statement), CSV (Date, Debit, Credit)
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Supported formats: PDF (bank statement), CSV (Date, Debit, Credit)
-                  </p>
+                  {preview.length > 0 && (
+                    <Button variant="ghost" size="sm" onClick={resetImport} disabled={isImporting}>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Clear
+                    </Button>
+                  )}
                 </div>
-                {preview.length > 0 && (
-                  <Button variant="ghost" size="sm" onClick={resetImport} disabled={isImporting}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Clear
-                  </Button>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -401,7 +462,7 @@ export const ImportTransactions = ({ categories, onImportComplete }: ImportTrans
                 {preview.map((transaction) => (
                   <Card 
                     key={transaction.id} 
-                    className={`transition-opacity ${!transaction.selected ? 'opacity-50' : ''}`}
+                    className={`transition-opacity ${transaction.selected ? '' : 'opacity-50'}`}
                   >
                     <CardContent className="p-3">
                       <div className="flex items-start gap-3">
@@ -426,6 +487,14 @@ export const ImportTransactions = ({ categories, onImportComplete }: ImportTrans
                           <p className="text-xs text-muted-foreground truncate" title={transaction.originalDescription}>
                             {transaction.originalDescription}
                           </p>
+                          {transaction.description !== transaction.originalDescription && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Sparkles className="h-3 w-3 text-yellow-500" />
+                              <span className="font-medium text-foreground">
+                                {transaction.description}
+                              </span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-2">
                             <Label className="text-xs shrink-0">Category:</Label>
                             <Select
@@ -487,7 +556,7 @@ export const ImportTransactions = ({ categories, onImportComplete }: ImportTrans
               ) : (
                 <>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Import {selectedCount} Transaction{selectedCount !== 1 ? 's' : ''}
+                  Import {selectedCount} Transaction{selectedCount === 1 ? '' : 's'}
                 </>
               )}
             </Button>

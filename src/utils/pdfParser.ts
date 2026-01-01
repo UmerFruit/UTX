@@ -123,14 +123,14 @@ function sanitizeDescription(description: string): string {
     sanitized = sanitized.replace(pattern, '[REMOVED]');
   }
   
-  sanitized = sanitized.replace(/\s+/g, ' ').trim();
+  sanitized = sanitized.replaceAll(/\s+/, ' ').trim();
   
   if (sanitized.length > 500) {
     sanitized = sanitized.substring(0, 500) + '...';
   }
   
   // eslint-disable-next-line no-control-regex
-  sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, '');
+  sanitized = sanitized.replaceAll(/[\x00-\x1F\x7F]/, '');
   
   return sanitized || 'Transaction';
 }
@@ -238,80 +238,93 @@ function parseNayaPayTransactionSection(lines: string[], transactions: ParsedTra
   }
 }
 
-function parseNayaPayTransaction(lines: string[]): ParsedTransaction | null {
-  let date = '';
-  let amount = 0;
-  let rawDescription = '';
-  let feeAmount = 0;
-  
+function extractDate(lines: string[]): string {
   for (const line of lines) {
-    const dateMatch = line.match(/(\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+202\d)/);
-    if (dateMatch && !date) {
-      date = dateMatch[1];
+    const dateMatch = /(\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+202\d)/.exec(line);
+    if (dateMatch) {
+      return dateMatch[1];
     }
-    
-    const feeMatch = line.match(/Fees and Government Taxes Rs\.\s*([\d,]+\.?\d*)/);
+  }
+  return '';
+}
+
+function extractFee(lines: string[]): number {
+  for (const line of lines) {
+    const feeMatch = /Fees and Government Taxes Rs\.\s*([\d,]+\.?\d*)/.exec(line);
     if (feeMatch) {
-      feeAmount = Number.parseFloat(feeMatch[1].replace(/,/g, ''));
+      return Number.parseFloat(feeMatch[1].replaceAll(/,/, ''));
     }
-    
-    const amountMatch = line.match(/[-+]?Rs\.\s+([\d,]+\.?\d*)/);
-    if (amountMatch && amount === 0) {
+  }
+  return 0;
+}
+
+function extractAmount(lines: string[]): number {
+  for (const line of lines) {
+    const amountMatch = /[-+]?Rs\.\s+([\d,]+\.?\d*)/.exec(line);
+    if (amountMatch) {
       const sign = line.includes('-Rs.') ? -1 : 1;
-      const value = Number.parseFloat(amountMatch[1].replace(/,/g, ''));
-      amount = sign * value;
+      const value = Number.parseFloat(amountMatch[1].replaceAll(/,/, ''));
+      return sign * value;
     }
-    
-    // Build description (skip technical junk)
-    const skipPatterns = [
-      /^\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+202\d$/,
-      /^\d{1,2}:\d{2}\s+(AM|PM)$/,
-      /^Transaction ID [a-f0-9]+$/,
-      /^United Bank-\d+$/,
-      /^Meezan Bank-\d+$/,
-      /^easypaisa Bank-\d+$/,
-      /^Meezan Bank-\d+$/,
-      /^Bank.*-\d+$/,
-      /^Visa xxxx\d+$/,
-      /^USD \d+$/,
-      /^EUR \d+$/,
-      /^PKR \d+$/,
-      /^Raast (In|Out)$/,
-      /^Online Transaction$/,
-      /^Online$/,
-      /^IBFT (In|Out)$/,
-      /^Peer to Peer$/,
-      /^Mobile Top-up$/,
-      /^VISA Refund Transaction$/,
-      /^Reversal$/,
-      /^Service Charges Rs\. 0$/,
-      /^-?Rs\.\s+[\d,]+\.?\d*$/,
-      /^Rs\.\s+[\d,]+\.?\d*$/,
-      /^Fees and Government Taxes/,
-      /^Transaction$/
-    ];
-    
+  }
+  return 0;
+}
+
+function buildDescription(lines: string[]): string {
+  const skipPatterns = [
+    /^\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+202\d$/,
+    /^\d{1,2}:\d{2}\s+(AM|PM)$/,
+    /^Transaction ID [a-f0-9]+$/,
+    /^United Bank-\d+$/,
+    /^Meezan Bank-\d+$/,
+    /^easypaisa Bank-\d+$/,
+    /^Meezan Bank-\d+$/,
+    /^Bank.*-\d+$/,
+    /^Visa xxxx\d+$/,
+    /^USD \d+$/,
+    /^EUR \d+$/,
+    /^PKR \d+$/,
+    /^Raast (In|Out)$/,
+    /^Online Transaction$/,
+    /^Online$/,
+    /^IBFT (In|Out)$/,
+    /^Peer to Peer$/,
+    /^Mobile Top-up$/,
+    /^VISA Refund Transaction$/,
+    /^Reversal$/,
+    /^Service Charges Rs\. 0$/,
+    /^-?Rs\.\s+[\d,]+\.?\d*$/,
+    /^Rs\.\s+[\d,]+\.?\d*$/,
+    /^Fees and Government Taxes/,
+    /^Transaction$/
+  ];
+
+  let rawDescription = '';
+  for (const line of lines) {
     const shouldSkip = skipPatterns.some(pattern => pattern.test(line));
-    
     if (!shouldSkip && line.length > 0) {
-      // Strip amounts and balances from the line before adding to description
-      let cleanLine = line;
-      // Remove patterns like "-Rs. 1,500" or "Rs. 10,783.02" from the line
-      cleanLine = cleanLine.replace(/-?Rs\.\s+[\d,]+\.?\d*/g, '').trim();
-      // Remove extra whitespace
-      cleanLine = cleanLine.replace(/\s+/g, ' ').trim();
-      
+      let cleanLine = line.replaceAll(/-?Rs\.\s+[\d,]+\.?\d*/, '').trim();
+      cleanLine = cleanLine.replaceAll(/\s+/, ' ').trim();
       if (cleanLine.length > 0) {
         rawDescription = rawDescription ? `${rawDescription} ${cleanLine}` : cleanLine;
       }
     }
   }
-  
+  return rawDescription;
+}
+
+function parseNayaPayTransaction(lines: string[]): ParsedTransaction | null {
+  const date = extractDate(lines);
+  const feeAmount = extractFee(lines);
+  const amount = extractAmount(lines);
+  const rawDescription = buildDescription(lines);
+
+  let adjustedAmount = amount;
   if (feeAmount > 0 && amount < 0) {
-    amount = amount - feeAmount;
+    adjustedAmount = amount - feeAmount;
   }
-  
-  if (date && amount !== 0) {
+
+  if (date && adjustedAmount !== 0) {
     const parts = date.split(' ');
     const day = parts[0].padStart(2, '0');
     const monthMap: Record<string, string> = {
@@ -321,20 +334,107 @@ function parseNayaPayTransaction(lines: string[]): ParsedTransaction | null {
     };
     const month = monthMap[parts[1]];
     const year = parts[2];
-    
-    // Clean the description to extract only essential information
+
     const cleanedDescription = cleanNayaPayDescription(rawDescription);
-    
+
     return {
       originalDate: date,
       date: `${year}-${month}-${day}`,
-      debit: amount < 0 ? Math.abs(amount) : 0,
-      credit: amount > 0 ? amount : 0,
+      debit: adjustedAmount < 0 ? Math.abs(adjustedAmount) : 0,
+      credit: Math.max(adjustedAmount, 0),
       description: sanitizeDescription(cleanedDescription) || 'Transaction'
     };
   }
-  
+
   return null;
+}
+
+function formatName(name: string): string {
+  if (name === name.toUpperCase() && name.length > 3) {
+    return name.split(/\s+/).map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ');
+  }
+  return name;
+}
+
+function cleanMerchantName(merchant: string): string {
+  merchant = merchant.replace(/\.COM$/i, '').replace(/\.com$/i, '');
+  const firstWord = merchant.split(/\s+/)[0];
+  return formatName(firstWord);
+}
+
+function cleanMoneyReceived(cleaned: string): string | null {
+  const match = /Money\s+received\s+from\s+(.+)/i.exec(cleaned);
+  if (match) {
+    return `Received from ${formatName(match[1].trim())}`;
+  }
+  return null;
+}
+
+function cleanMoneySent(cleaned: string): string | null {
+  const match = /Money\s+sent\s+to\s+(.+)/i.exec(cleaned);
+  if (match) {
+    return `Sent to ${formatName(match[1].trim())}`;
+  }
+  return null;
+}
+
+function cleanOutgoingTransfer(cleaned: string): string | null {
+  const match = /(?:Outgoing|outgoing)\s+fund\s+transfer\s+to\s+(.+)/i.exec(cleaned);
+  if (match) {
+    return `Transfer to ${match[1].trim()}`;
+  }
+  return null;
+}
+
+function cleanIncomingTransfer(cleaned: string): string | null {
+  const match = /(?:Incoming|incoming)\s+fund\s+transfer\s+from\s+(.+)/i.exec(cleaned);
+  if (match) {
+    const sender = match[1].trim().split(/\s+/).slice(0, 3).join(' ');
+    return `Transfer from ${sender}`;
+  }
+  return null;
+}
+
+function cleanPaidTo(cleaned: string): string | null {
+  const match = /(?:Paid|paid)\s+to\s+([A-Z0-9.\s]+?)(?:\s+BY\s+|\s*$)/i.exec(cleaned);
+  if (match) {
+    return cleanMerchantName(match[1].trim());
+  }
+  return null;
+}
+
+function cleanReversal(cleaned: string): string | null {
+  const match = /Reversed:\s+(?:Paid|paid)\s+to\s+([A-Z0-9.\s]+?)(?:\s+[A-Z][a-z]+\s+[A-Z]{2}|\s*$)/i.exec(cleaned);
+  if (match) {
+    return `${cleanMerchantName(match[1].trim())} Refund`;
+  }
+  return null;
+}
+
+function cleanSpecialCases(cleaned: string): string | null {
+  const lower = cleaned.toLowerCase();
+  if (lower.includes('atm') || lower.includes('cash withdrawal')) {
+    return 'ATM Withdrawal';
+  }
+  if (lower.includes('mobile') && lower.includes('top')) {
+    return 'Mobile Top-up';
+  }
+  return null;
+}
+
+function cleanFallback(cleaned: string): string {
+  const words = cleaned.split(/\s+/).filter(w => 
+    w.length > 2 && 
+    !/^\d+$/.test(w) && 
+    !/^[A-Z0-9]{10,}$/.test(w)
+  );
+  if (words.length > 0) {
+    const meaningful = words.slice(0, Math.min(5, words.length)).join(' ');
+    return meaningful.length > 50 ? meaningful.substring(0, 50) + '...' : meaningful;
+  }
+  return 'Transaction';
 }
 
 /**
@@ -347,99 +447,43 @@ function cleanNayaPayDescription(desc: string): string {
   
   let cleaned = desc.trim();
   
-  // Pattern 1: Outgoing fund transfer - extract recipient name
-  // "Outgoing fund transfer to Muhammad Farhan" → "Transfer to Muhammad Farhan"
-  const outgoingTransferMatch = cleaned.match(/(?:Outgoing|outgoing)\s+fund\s+transfer\s+to\s+(.+)/i);
-  if (outgoingTransferMatch) {
-    return `Transfer to ${outgoingTransferMatch[1].trim()}`;
-  }
+  // Remove email addresses and account numbers from the description
+  cleaned = cleaned.replaceAll(/\([^@]+@[^)]+\)/, '');
+  cleaned = cleaned.replaceAll(/NayaPay\s+xxxx\d+/, '').replaceAll(/nayapay\s+xxxx\d+/, '');
+  cleaned = cleaned.replaceAll(/\s+/, ' ').trim();
   
-  // Pattern 2: Incoming fund transfer - extract sender name
-  // "Incoming fund transfer from Ahmed Abdullah Mujahid" → "Transfer from Ahmed Abdullah"
-  const incomingTransferMatch = cleaned.match(/(?:Incoming|incoming)\s+fund\s+transfer\s+from\s+(.+)/i);
-  if (incomingTransferMatch) {
-    const sender = incomingTransferMatch[1].trim().split(/\s+/).slice(0, 3).join(' '); // Take first 3 words
-    return `Transfer from ${sender}`;
-  }
+  // Try each pattern in order
+  const patterns = [
+    cleanMoneyReceived,
+    cleanMoneySent,
+    cleanOutgoingTransfer,
+    cleanIncomingTransfer,
+    cleanPaidTo,
+    cleanReversal,
+    cleanSpecialCases
+  ];
   
-  // Pattern 3: Paid to merchant - extract merchant name
-  // "Paid to VULTR BY CONSTANT WEST PALM BEAUS" → "VULTR"
-  // "Paid to NETFLIX.COM Singapore SG" → "Netflix"
-  // "Paid to Netflix.com Los Gatos SG" → "Netflix"
-  const paidToMatch = cleaned.match(/(?:Paid|paid)\s+to\s+([A-Z0-9.\s]+?)(?:\s+BY\s+|\s+[A-Z][a-z]+\s+[A-Z]{2}|\s*$)/i);
-  if (paidToMatch) {
-    let merchant = paidToMatch[1].trim();
-    
-    // Clean up merchant name
-    merchant = merchant.replace(/\.COM$/i, '').replace(/\.com$/i, '');
-    
-    // Take first word if multiple words (e.g., "VULTR BY CONSTANT" → "VULTR")
-    const firstWord = merchant.split(/\s+/)[0];
-    
-    // Capitalize properly
-    if (firstWord === firstWord.toUpperCase() && firstWord.length > 2) {
-      // If all caps, convert to title case
-      merchant = firstWord.charAt(0) + firstWord.slice(1).toLowerCase();
-    } else {
-      merchant = firstWord;
+  for (const pattern of patterns) {
+    const result = pattern(cleaned);
+    if (result) {
+      return result;
     }
-    
-    return merchant;
   }
   
-  // Pattern 4: Reversal - show what was reversed
-  // "Reversed: Paid to NETFLIX.COM Singapore SG" → "Netflix Refund"
-  const reversalMatch = cleaned.match(/Reversed:\s+(?:Paid|paid)\s+to\s+([A-Z0-9.\s]+?)(?:\s+[A-Z][a-z]+\s+[A-Z]{2}|\s*$)/i);
-  if (reversalMatch) {
-    let merchant = reversalMatch[1].trim();
-    merchant = merchant.replace(/\.COM$/i, '').replace(/\.com$/i, '');
-    const firstWord = merchant.split(/\s+/)[0];
-    
-    if (firstWord === firstWord.toUpperCase() && firstWord.length > 2) {
-      merchant = firstWord.charAt(0) + firstWord.slice(1).toLowerCase();
-    } else {
-      merchant = firstWord;
-    }
-    
-    return `${merchant} Refund`;
-  }
-  
-  // Pattern 5: ATM withdrawal
-  if (cleaned.toLowerCase().includes('atm') || cleaned.toLowerCase().includes('cash withdrawal')) {
-    return 'ATM Withdrawal';
-  }
-  
-  // Pattern 6: Mobile top-up
-  if (cleaned.toLowerCase().includes('mobile') && cleaned.toLowerCase().includes('top')) {
-    return 'Mobile Top-up';
-  }
-  
-  // Fallback: Take first 3-5 meaningful words
-  const words = cleaned.split(/\s+/).filter(w => 
-    w.length > 2 && 
-    !/^\d+$/.test(w) && 
-    !/^[A-Z0-9]{10,}$/.test(w) // Skip long alphanumeric codes
-  );
-  
-  if (words.length > 0) {
-    const meaningful = words.slice(0, Math.min(5, words.length)).join(' ');
-    return meaningful.length > 50 ? meaningful.substring(0, 50) + '...' : meaningful;
-  }
-  
-  return 'Transaction';
+  return cleanFallback(cleaned);
 }
 
 function extractNayaPayHeaderTotals(text: string): { expenses: number | null; income: number | null } {
   const totals: { expenses: number | null; income: number | null } = { expenses: null, income: null };
   
-  const spentMatch = text.match(/Total\s+Spent[^\d]*Rs\.\s*([\d,]+\.?\d*)/i);
-  const incomeMatch = text.match(/Total\s+Income[^\d]*Rs\.\s*([\d,]+\.?\d*)/i);
+  const spentMatch = /Total\s+Spent[^\d]*Rs\.\s*([\d,]+\.?\d*)/i.exec(text);
+  const incomeMatch = /Total\s+Income[^\d]*Rs\.\s*([\d,]+\.?\d*)/i.exec(text);
   
   if (spentMatch) {
-    totals.expenses = Number.parseFloat(spentMatch[1].replace(/,/g, ''));
+    totals.expenses = Number.parseFloat(spentMatch[1].replaceAll(/,/, ''));
   }
   if (incomeMatch) {
-    totals.income = Number.parseFloat(incomeMatch[1].replace(/,/g, ''));
+    totals.income = Number.parseFloat(incomeMatch[1].replaceAll(/,/, ''));
   }
   
   return totals;
@@ -671,7 +715,7 @@ export function convertToImportFormat(transactions: ParsedTransaction[]): Import
 
 function convertDateToISO(dateStr: string): string {
   // Try DD-MM-YYYY format
-  const ddmmyyyy = dateStr.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  const ddmmyyyy = new RegExp(/^(\d{1,2})-(\d{1,2})-(\d{4})$/).exec(dateStr);
   if (ddmmyyyy) {
     const [, day, month, year] = ddmmyyyy;
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
@@ -698,7 +742,7 @@ export function parseCSV(csvContent: string): ParsedTransaction[] {
       const [dateStr, debitStr, creditStr, ...descParts] = parts;
       const debit = Number.parseFloat(debitStr) || 0;
       const credit = Number.parseFloat(creditStr) || 0;
-      const description = descParts.join(',').replace(/^"|"$/g, '').trim();
+      const description = descParts.join(',').replaceAll(/^"$/, '').trim();
       
       transactions.push({
         originalDate: dateStr,
