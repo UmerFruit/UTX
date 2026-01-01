@@ -10,6 +10,26 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const createErrorResponse = (error: string, status = 500, details?: any) => {
+  return new Response(
+    JSON.stringify({ error, details }),
+    { status, headers: { "Content-Type": "application/json", ...corsHeaders } }
+  )
+}
+
+const deleteUserData = async (supabase: any, table: string, userId: string) => {
+  const { error } = await supabase
+    .from(table)
+    .delete()
+    .eq('user_id', userId)
+  
+  if (error) {
+    console.error(`Error deleting ${table}:`, error)
+    throw new Error(`Failed to delete ${table}: ${error.message}`)
+  }
+  console.log(`${table} deleted successfully`)
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -32,21 +52,15 @@ Deno.serve(async (req) => {
     // Get the authorization header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'No authorization header' }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      )
+      return createErrorResponse('No authorization header', 401)
     }
 
     // Get the user from the JWT
-    const token = authHeader.replace('Bearer ', '')
+    const token = authHeader.replaceAll('Bearer ', '')
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
 
     if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      )
+      return createErrorResponse('Invalid token', 401)
     }
 
     const userId = user.id
@@ -54,64 +68,16 @@ Deno.serve(async (req) => {
     console.log(`Starting account deletion for user: ${userId}`)
 
     // Delete all user data in the correct order (due to foreign key constraints)
-    // First delete expenses and income (they reference categories)
-    // Then delete categories
-    // Finally delete the user account
-
-    // Delete expenses
-    const { error: expensesError } = await supabase
-      .from('expenses')
-      .delete()
-      .eq('user_id', userId)
-
-    if (expensesError) {
-      console.error('Error deleting expenses:', expensesError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to delete expenses', details: expensesError.message }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      )
-    }
-    console.log('Expenses deleted successfully')
-
-    // Delete income (singular table name)
-    const { error: incomeError } = await supabase
-      .from('income')
-      .delete()
-      .eq('user_id', userId)
-
-    if (incomeError) {
-      console.error('Error deleting income:', incomeError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to delete income', details: incomeError.message }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      )
-    }
-    console.log('Income deleted successfully')
-
-    // Delete categories
-    const { error: categoriesError } = await supabase
-      .from('categories')
-      .delete()
-      .eq('user_id', userId)
-
-    if (categoriesError) {
-      console.error('Error deleting categories:', categoriesError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to delete categories', details: categoriesError.message }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      )
-    }
-    console.log('Categories deleted successfully')
+    await deleteUserData(supabase, 'expenses', userId)
+    await deleteUserData(supabase, 'income', userId)
+    await deleteUserData(supabase, 'categories', userId)
 
     // Finally, delete the user account
     const { error: deleteUserError } = await supabase.auth.admin.deleteUser(userId)
 
     if (deleteUserError) {
       console.error('Error deleting user:', deleteUserError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to delete user account' }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      )
+      return createErrorResponse('Failed to delete user account')
     }
 
     return new Response(
@@ -119,11 +85,8 @@ Deno.serve(async (req) => {
       { headers: { "Content-Type": "application/json", ...corsHeaders } }
     )
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Unexpected error:', error)
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    )
+    return createErrorResponse(error.message || 'Internal server error')
   }
 })
