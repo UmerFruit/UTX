@@ -123,14 +123,14 @@ function sanitizeDescription(description: string): string {
     sanitized = sanitized.replace(pattern, '[REMOVED]');
   }
   
-  sanitized = sanitized.replaceAll(/\s+/, ' ').trim();
+  sanitized = sanitized.replaceAll(/\s+/g, ' ').trim();
   
   if (sanitized.length > 500) {
     sanitized = sanitized.substring(0, 500) + '...';
   }
   
   // eslint-disable-next-line no-control-regex
-  sanitized = sanitized.replaceAll(/[\x00-\x1F\x7F]/, '');
+  sanitized = sanitized.replaceAll(/[\x00-\x1F\x7F]/g, '');
   
   return sanitized || 'Transaction';
 }
@@ -252,7 +252,7 @@ function extractFee(lines: string[]): number {
   for (const line of lines) {
     const feeMatch = /Fees and Government Taxes Rs\.\s*([\d,]+\.?\d*)/.exec(line);
     if (feeMatch) {
-      return Number.parseFloat(feeMatch[1].replaceAll(/,/, ''));
+      return Number.parseFloat(feeMatch[1].replaceAll(',', ''));
     }
   }
   return 0;
@@ -263,7 +263,7 @@ function extractAmount(lines: string[]): number {
     const amountMatch = /[-+]?Rs\.\s+([\d,]+\.?\d*)/.exec(line);
     if (amountMatch) {
       const sign = line.includes('-Rs.') ? -1 : 1;
-      const value = Number.parseFloat(amountMatch[1].replaceAll(/,/, ''));
+      const value = Number.parseFloat(amountMatch[1].replaceAll(',', ''));
       return sign * value;
     }
   }
@@ -303,8 +303,8 @@ function buildDescription(lines: string[]): string {
   for (const line of lines) {
     const shouldSkip = skipPatterns.some(pattern => pattern.test(line));
     if (!shouldSkip && line.length > 0) {
-      let cleanLine = line.replaceAll(/-?Rs\.\s+[\d,]+\.?\d*/, '').trim();
-      cleanLine = cleanLine.replaceAll(/\s+/, ' ').trim();
+      let cleanLine = line.replaceAll(/-?Rs\.\s+[\d,]+\.?\d*/g, '').trim();
+      cleanLine = cleanLine.replaceAll(/\s+/g, ' ').trim();
       if (cleanLine.length > 0) {
         rawDescription = rawDescription ? `${rawDescription} ${cleanLine}` : cleanLine;
       }
@@ -448,9 +448,9 @@ function cleanNayaPayDescription(desc: string): string {
   let cleaned = desc.trim();
   
   // Remove email addresses and account numbers from the description
-  cleaned = cleaned.replaceAll(/\([^@]+@[^)]+\)/, '');
-  cleaned = cleaned.replaceAll(/NayaPay\s+xxxx\d+/, '').replaceAll(/nayapay\s+xxxx\d+/, '');
-  cleaned = cleaned.replaceAll(/\s+/, ' ').trim();
+  cleaned = cleaned.replaceAll(/\([^@]+@[^)]+\)/g, '');
+  cleaned = cleaned.replaceAll(/NayaPay\s+xxxx\d+/g, '').replaceAll(/nayapay\s+xxxx\d+/g, '');
+  cleaned = cleaned.replaceAll(/\s+/g, ' ').trim();
   
   // Try each pattern in order
   const patterns = [
@@ -480,10 +480,10 @@ function extractNayaPayHeaderTotals(text: string): { expenses: number | null; in
   const incomeMatch = /Total\s+Income[^\d]*Rs\.\s*([\d,]+\.?\d*)/i.exec(text);
   
   if (spentMatch) {
-    totals.expenses = Number.parseFloat(spentMatch[1].replaceAll(/,/, ''));
+    totals.expenses = Number.parseFloat(spentMatch[1].replaceAll(',', ''));
   }
   if (incomeMatch) {
-    totals.income = Number.parseFloat(incomeMatch[1].replaceAll(/,/, ''));
+    totals.income = Number.parseFloat(incomeMatch[1].replaceAll(',', ''));
   }
   
   return totals;
@@ -742,7 +742,7 @@ export function parseCSV(csvContent: string): ParsedTransaction[] {
       const [dateStr, debitStr, creditStr, ...descParts] = parts;
       const debit = Number.parseFloat(debitStr) || 0;
       const credit = Number.parseFloat(creditStr) || 0;
-      const description = descParts.join(',').replaceAll(/^"$/, '').trim();
+      const description = descParts.join(',').replaceAll(/^"/g, '').replaceAll(/"$/g, '').trim();
       
       transactions.push({
         originalDate: dateStr,

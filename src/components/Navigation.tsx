@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { DollarSign, LogOut, User, Menu, Home, TrendingUp, Trash2 } from 'lucide-react';
+import { DollarSign, LogOut, User, Menu, Home, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,8 +39,6 @@ export const Navigation = ({ onMenuToggle }: NavigationProps) => {
 
   const navItems = [
     { title: 'Dashboard', href: '/', icon: Home },
-    { title: 'Expenses', href: '/expenses', icon: DollarSign },
-    { title: 'Income', href: '/income', icon: TrendingUp },
   ];
 
   const handleSignOut = async () => {

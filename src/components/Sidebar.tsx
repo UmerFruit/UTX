@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { X, Download, Tag, BarChart3 } from 'lucide-react';
+import { X, Download, Tag, BarChart3, DollarSign, TrendingUp } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,6 +44,16 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       title: 'Analysis',
       href: '/analysis',
       icon: BarChart3,
+    },
+    {
+      title: 'Expenses',
+      href: '/expenses',
+      icon: DollarSign,
+    },
+    {
+      title: 'Income',
+      href: '/income',
+      icon: TrendingUp,
     },
     {
       title: 'Categories',
