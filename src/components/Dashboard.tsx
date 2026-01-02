@@ -82,7 +82,7 @@ export const Dashboard = () => {
         <div className="grid gap-4 sm:gap-8 grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 mb-6 sm:mb-12">
           <Dialog open={showAddExpense} onOpenChange={setShowAddExpense}>
             <DialogTrigger asChild>
-              <Card className="xs:col-span-2 lg:col-span-1 shadow-sm hover:shadow-md transition-shadow cursor-pointer hover:bg-red-50/50">
+              <Card className="xs:col-span-2 lg:col-span-1 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border-l-4 border-l-red-500 hover:bg-red-50/50 dark:hover:bg-red-950/20">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                   <CardTitle className="text-sm sm:text-base font-semibold">Monthly Expenses</CardTitle>
                   <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
@@ -110,7 +110,7 @@ export const Dashboard = () => {
 
           <Dialog open={showAddIncome} onOpenChange={setShowAddIncome}>
             <DialogTrigger asChild>
-              <Card className="xs:col-span-2 lg:col-span-1 shadow-sm hover:shadow-md transition-shadow cursor-pointer hover:bg-green-50/50">
+              <Card className="xs:col-span-2 lg:col-span-1 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border-l-4 border-l-green-500 hover:bg-green-50/50 dark:hover:bg-green-950/20">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                   <CardTitle className="text-sm sm:text-base font-semibold">Monthly Income</CardTitle>
                   <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
@@ -136,7 +136,7 @@ export const Dashboard = () => {
             </DialogContent>
           </Dialog>
 
-          <Card className="xs:col-span-2 lg:col-span-1 shadow-sm hover:shadow-md transition-shadow">
+          <Card className={`xs:col-span-2 lg:col-span-1 shadow-sm hover:shadow-md transition-all duration-200 border-l-4 ${netMonthlyFlow >= 0 ? 'border-l-green-500 hover:bg-green-50/50 dark:hover:bg-green-950/20' : 'border-l-red-500 hover:bg-red-50/50 dark:hover:bg-red-950/20'}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm sm:text-base font-semibold">Net Cash Flow</CardTitle>
               <DollarSign className={`h-4 w-4 sm:h-5 sm:w-5 ${netMonthlyFlow >= 0 ? 'text-green-600' : 'text-red-600'}`} />
@@ -156,7 +156,7 @@ export const Dashboard = () => {
         <div className="space-y-6 sm:space-y-8">
           <div className="grid gap-6 sm:gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
-              <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <Card className="shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-l-primary">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl sm:text-2xl font-bold">Recent Expenses</CardTitle>
                   <CardDescription className="text-sm sm:text-base">Your latest expenses</CardDescription>
@@ -171,7 +171,7 @@ export const Dashboard = () => {
             </div>
 
             <div className="space-y-6 sm:space-y-8">
-              <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <Card className="shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-l-primary">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl sm:text-2xl font-bold text-center">Spending by Category</CardTitle>
                 </CardHeader>

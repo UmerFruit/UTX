@@ -1,27 +1,16 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useIncome } from '@/hooks/useIncome';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { CategorySelectWithCreate } from '@/components/CategorySelectWithCreate';
+import { useIncome } from '@/hooks/useIncome';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
-const incomeSchema = z.object({
-  category_id: z.string().optional(),
-  amount: z.number().positive('Amount must be positive'),
-  date: z.string().min(1, 'Date is required'),
-  description: z.string().optional(),
-  is_recurring: z.boolean().default(false),
-  recurring_period: z.enum(['weekly', 'monthly', 'yearly']).optional(),
-});
-
-type IncomeFormData = z.infer<typeof incomeSchema>;
+type RecurringPeriod = 'weekly' | 'monthly' | 'yearly' | '';
 
 interface AddIncomeFormProps {
   onSuccess?: () => void;
@@ -30,180 +19,182 @@ interface AddIncomeFormProps {
 export const AddIncomeForm = ({ onSuccess }: AddIncomeFormProps) => {
   const { createIncome } = useIncome();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const form = useForm<IncomeFormData>({
-    resolver: zodResolver(incomeSchema),
-    defaultValues: {
-      category_id: '',
-      amount: 0,
-      date: new Date().toISOString().split('T')[0],
-      description: '',
-      is_recurring: false,
-      recurring_period: undefined,
-    },
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    amount: '',
+    category_id: '',
+    date: new Date().toISOString().split('T')[0], // Today's date
+    description: '',
+    is_recurring: false,
+    recurring_period: '' as RecurringPeriod,
   });
 
-  const isRecurring = form.watch('is_recurring');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-  const onSubmit = async (data: IncomeFormData) => {
-    setIsSubmitting(true);
-    
-    const incomeData = {
-      category_id: data.category_id || null,
-      amount: data.amount,
-      date: data.date,
-      description: data.description || null,
-      is_recurring: data.is_recurring,
-      recurring_period: data.is_recurring ? data.recurring_period || null : null,
-    };
-
-    const { error } = await createIncome(incomeData);
-
-    if (error) {
+    // Validation
+    if (!formData.amount || !formData.date) {
       toast({
         title: "Error",
-        description: "Failed to add income",
+        description: "Please fill in all required fields",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Success",
-        description: "Income added successfully",
-      });
-      form.reset();
-      onSuccess?.();
+      setLoading(false);
+      return;
     }
 
-    setIsSubmitting(false);
+    const amount = Number.parseFloat(formData.amount);
+    if (Number.isNaN(amount) || amount <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid amount",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { error } = await createIncome({
+        amount,
+        category_id: formData.category_id || null,
+        date: formData.date,
+        description: formData.description.trim() || null,
+        is_recurring: formData.is_recurring,
+        recurring_period: formData.is_recurring ? formData.recurring_period || null : null,
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to add income",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Income added successfully",
+        });
+
+        // Reset form
+        setFormData({
+          amount: '',
+          category_id: '',
+          date: new Date().toISOString().split('T')[0],
+          description: '',
+          is_recurring: false,
+          recurring_period: '' as RecurringPeriod,
+        });
+
+        onSuccess?.();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive",
+      });
+      
+    }
+
+    setLoading(false);
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Amount</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:hidden [&::-webkit-inner-spin-button]:hidden"
-                  {...field}
-                  onChange={(e) => field.onChange(Number.parseFloat(e.target.value) || 0)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="category_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category</FormLabel>
-              <FormControl>
-                <CategorySelectWithCreate
-                  value={field.value || ''}
-                  onValueChange={field.onChange}
-                  placeholder="Select a category"
-                  defaultCategoryType="income"
-                  filterByType="income"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="date"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description (Optional)</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Additional details about this income..."
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="is_recurring"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  className="h-4 w-4 mt-0.5"
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="space-y-0 leading-none">
-                <FormLabel>Recurring Income</FormLabel>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {isRecurring && (
-          <FormField
-            control={form.control}
-            name="recurring_period"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Recurring Period</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select period" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="amount">Amount *</Label>
+          <Input
+            id="amount"
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            value={formData.amount}
+            className="[appearance:textfield] [&::-webkit-outer-spin-button]:hidden [&::-webkit-inner-spin-button]:hidden"
+            onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+            required
           />
-        )}
-
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Adding...' : 'Add Income'}
-          </Button>
         </div>
-      </form>
-    </Form>
+
+        <div className="space-y-2">
+          <Label htmlFor="date">Date *</Label>
+          <Input
+            id="date"
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="category">Category</Label>
+        <CategorySelectWithCreate
+          value={formData.category_id}
+          onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+          placeholder="Select a category"
+          defaultCategoryType="income"
+          filterByType="income"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          placeholder="What was this income for?"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          rows={3}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="is_recurring"
+            checked={formData.is_recurring}
+            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_recurring: checked as boolean }))}
+          />
+          <Label htmlFor="is_recurring">Recurring Income</Label>
+        </div>
+      </div>
+
+      {formData.is_recurring && (
+        <div className="space-y-2">
+          <Label htmlFor="recurring_period">Recurring Period</Label>
+          <Select
+            value={formData.recurring_period}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, recurring_period: value as RecurringPeriod }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="weekly">Weekly</SelectItem>
+              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="yearly">Yearly</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      <div className="flex justify-end gap-2">
+        <Button type="submit" disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Adding...
+            </>
+          ) : (
+            'Add Income'
+          )}
+        </Button>
+      </div>
+    </form>
   );
 };

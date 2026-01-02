@@ -218,8 +218,8 @@ const Categories = () => {
             <div className="flex items-center gap-3">
               <Tag className="h-8 w-8 text-primary" />
               <div>
-                <h1 className="text-3xl font-bold">Categories</h1>
-                <p className="text-muted-foreground">Manage your expense categories</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Categories</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">Manage your expense categories</p>
               </div>
             </div>
           </div>
@@ -251,8 +251,8 @@ const Categories = () => {
           <div className="flex items-center gap-3">
             <Tag className="h-8 w-8 text-primary" />
             <div>
-              <h1 className="text-3xl font-bold">Categories</h1>
-              <p className="text-muted-foreground">Manage your expense categories</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Categories</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">Manage your expense categories</p>
             </div>
           </div>
         </div>
@@ -262,7 +262,7 @@ const Categories = () => {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <DialogTrigger asChild>
-                <Card className="cursor-pointer hover:shadow-md transition-shadow border-dashed border-2 border-primary">
+                <Card className="cursor-pointer hover:shadow-md transition-all duration-200 border-dashed border-2 border-primary">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-center">
                       <div className="text-center">
@@ -342,7 +342,7 @@ const Categories = () => {
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {expenseCategories.map((category) => (
-                    <Card key={category.id} className="relative group">
+                    <Card key={category.id} className="relative group hover:shadow-md transition-all duration-200 border-l-4 border-l-red-500">
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -390,7 +390,7 @@ const Categories = () => {
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {incomeCategories.map((category) => (
-                    <Card key={category.id} className="relative group">
+                    <Card key={category.id} className="relative group hover:shadow-md transition-all duration-200 border-l-4 border-l-green-500">
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -438,7 +438,7 @@ const Categories = () => {
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {generalCategories.map((category) => (
-                    <Card key={category.id} className="relative group">
+                    <Card key={category.id} className="relative group hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500">
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">

@@ -52,7 +52,7 @@ export const LoansSummary = () => {
 
   if (loading) {
     return (
-      <Card className="shadow-sm">
+      <Card className="shadow-sm hover:shadow-md transition-all duration-200">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-4 bg-muted rounded w-3/4"></div>

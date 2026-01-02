@@ -9,9 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useLoans, Loan } from '@/hooks/useLoans';
+import { useToast } from '@/hooks/use-toast';
 import { AddLoanForm } from '@/components/AddLoanForm';
 import { LoanDetail } from '@/components/LoanDetail';
 import { AddTransactionForm } from '@/components/AddTransactionForm';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { formatCurrency, formatDate } from '@/utils/dateUtils';
 import { 
   Plus, 
@@ -24,7 +26,8 @@ import {
   CheckCircle2,
   Clock,
   ArrowRight,
-  CircleDollarSign
+  CircleDollarSign,
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Navigate } from 'react-router-dom';
@@ -70,7 +73,7 @@ const getLoanAmountColor = (status: string, loanType: string) => {
 };
 
 // Extracted components
-const LoanCard = ({ loan, onSelect }: { loan: Loan; onSelect: (loan: Loan) => void }) => (
+const LoanCard = ({ loan, onSelect, onDelete }: { loan: Loan; onSelect: (loan: Loan) => void; onDelete?: (loan: Loan) => void }) => (
   <Card 
     className={cn(
       "cursor-pointer transition-all duration-200 hover:shadow-md",
@@ -138,6 +141,20 @@ const LoanCard = ({ loan, onSelect }: { loan: Loan; onSelect: (loan: Loan) => vo
               Add Payment
             </Button>
           )}
+          {loan.status === 'settled' && onDelete && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(loan);
+              }}
+              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+            >
+              <Trash2 className="mr-1 h-3 w-3" />
+              Delete
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -187,12 +204,14 @@ const EmptyState = ({ type, onCreateLoan }: { type: 'active' | 'settled'; onCrea
 
 const Loans = () => {
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const { 
     loans, 
     loading, 
     getActiveLoans, 
     getSettledLoans, 
     getLoansSummary,
+    deleteLoan,
     refetch 
   } = useLoans();
   
@@ -201,6 +220,7 @@ const Loans = () => {
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [activeTab, setActiveTab] = useState('active');
   const [quickPayLoan, setQuickPayLoan] = useState<Loan | null>(null);
+  const [loanToDelete, setLoanToDelete] = useState<Loan | null>(null);
 
   const activeLoans = useMemo(() => getActiveLoans(), [getActiveLoans]);
   const settledLoans = useMemo(() => getSettledLoans(), [getSettledLoans]);
@@ -244,6 +264,30 @@ const Loans = () => {
     setQuickPayLoan(loan);
   };
 
+  const handleDeleteLoan = (loan: Loan) => {
+    setLoanToDelete(loan);
+  };
+
+  const confirmDeleteLoan = async () => {
+    if (!loanToDelete) return;
+    
+    const { error } = await deleteLoan(loanToDelete.id);
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete loan",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Loan deleted successfully",
+      });
+      refetch();
+    }
+    setLoanToDelete(null);
+  };
+
   // If a loan is selected, show its detail view
   if (selectedLoan) {
     const currentLoan = loans.find(l => l.id === selectedLoan.id) || selectedLoan;
@@ -264,7 +308,7 @@ const Loans = () => {
 
   const renderSummaryCards = () => (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-3 mb-6">
-      <Card className="border-l-4 border-l-green-500">
+      <Card className="border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-all duration-200">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -283,7 +327,7 @@ const Loans = () => {
         </CardContent>
       </Card>
 
-      <Card className="border-l-4 border-l-red-500">
+      <Card className="border-l-4 border-l-red-500 shadow-sm hover:shadow-md transition-all duration-200">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -302,7 +346,7 @@ const Loans = () => {
         </CardContent>
       </Card>
 
-      <Card className={cn("border-l-4", getNetPositionBorderColor(summary.netPosition))}>
+      <Card className={cn("border-l-4 shadow-sm hover:shadow-md transition-all duration-200", getNetPositionBorderColor(summary.netPosition))}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -328,7 +372,7 @@ const Loans = () => {
       className={cn(
         "cursor-pointer transition-all duration-200 hover:shadow-md",
         "border-l-4",
-        loan.loan_type === 'lent'? "border-l-green-500 dark:hover:bg-green-950/20" 
+        loan.loan_type === 'lent'? "border-l-green-500 hover:bg-green-50/50 dark:hover:bg-green-950/20" 
           : "border-l-red-500 hover:bg-red-50/50 dark:hover:bg-red-950/20"
       )}
       onClick={() => setSelectedLoan(loan)}
@@ -445,13 +489,7 @@ const Loans = () => {
       
       <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-8 max-w-6xl">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Loans</h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Track money you've lent to or borrowed from friends
-            </p>
-          </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 mb-6">
           <Dialog open={showAddLoan} onOpenChange={setShowAddLoan}>
             <DialogTrigger asChild>
               <Button className="w-full sm:w-auto">
@@ -512,7 +550,7 @@ const Loans = () => {
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
                   {activeLoans.map((loan) => (
-                    <div key={loan.id}>{renderLoanCard(loan)}</div>
+                    <LoanCard key={loan.id} loan={loan} onSelect={setSelectedLoan} />
                   ))}
                 </div>
               )}
@@ -524,7 +562,7 @@ const Loans = () => {
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
                   {settledLoans.map((loan) => (
-                    <div key={loan.id}>{renderLoanCard(loan)}</div>
+                    <LoanCard key={loan.id} loan={loan} onSelect={setSelectedLoan} onDelete={handleDeleteLoan} />
                   ))}
                 </div>
               )}
@@ -550,6 +588,18 @@ const Loans = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+          open={!!loanToDelete}
+          onOpenChange={(open) => !open && setLoanToDelete(null)}
+          title="Delete Settled Loan"
+          description={`Are you sure you want to delete the settled loan with ${loanToDelete?.person_name}? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDeleteLoan}
+          variant="destructive"
+        />
       </main>
 
       {/* Floating Action Button for Mobile */}

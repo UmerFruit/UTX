@@ -66,11 +66,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       icon: TrendingUp,
     },
     {
-      title: 'Import',
-      href: '/import',
-      icon: Upload,
-    },
-    {
       title: 'Categories',
       href: '/categories',
       icon: Tag,
@@ -141,7 +136,18 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         </div>
         
         <div className={cn("pt-4 border-t", "lg:mt-0")}>
+          {/* Import Button */}
+          <Link to="/import" onClick={onClose}>
+            <Button
+              variant="ghost"
+              className="w-full justify-start hover:bg-accent"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Import
+            </Button>
+          </Link>
 
+          {/* Export Dialog */}
           <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
             <DialogTrigger asChild>
               <Button

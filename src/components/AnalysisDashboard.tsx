@@ -448,7 +448,7 @@ const OverviewCards = ({
   previousMonthData: { totalIncome: number; totalExpenses: number };
 }) => (
   <div className="grid gap-4 md:grid-cols-4">
-    <Card>
+    <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-green-500">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
         <TrendingUp className="h-4 w-4 text-green-600" />
@@ -471,7 +471,7 @@ const OverviewCards = ({
       </CardContent>
     </Card>
 
-    <Card>
+    <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-red-500">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
         <TrendingDown className="h-4 w-4 text-red-600" />
@@ -494,7 +494,7 @@ const OverviewCards = ({
       </CardContent>
     </Card>
 
-    <Card>
+    <Card className={`hover:shadow-md transition-all duration-200 border-l-4 ${netIncome >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Net Income</CardTitle>
         <DollarSign className={`h-4 w-4 ${netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`} />
@@ -509,7 +509,7 @@ const OverviewCards = ({
       </CardContent>
     </Card>
 
-    <Card>
+    <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Savings Rate</CardTitle>
         <Target className="h-4 w-4 text-blue-600" />
@@ -529,7 +529,7 @@ const OverviewCards = ({
 );
 
 const TrendChart = ({ combinedTrendData }: { combinedTrendData: any[] }) => (
-  <Card>
+  <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-primary">
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
         <TrendingUp className="h-5 w-5" />
@@ -593,7 +593,7 @@ const IncomeTab = ({ incomeAnalysis, selectedMonthIncome }: { incomeAnalysis: an
   return (
     <TabsContent value="income" className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-green-500">
           <CardHeader>
             <CardTitle>Income by Category</CardTitle>
             <CardDescription>Distribution of income sources</CardDescription>
@@ -629,7 +629,7 @@ const IncomeTab = ({ incomeAnalysis, selectedMonthIncome }: { incomeAnalysis: an
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-green-500">
           <CardHeader>
             <CardTitle>Income Composition</CardTitle>
             <CardDescription>Recurring vs One-time income</CardDescription>
@@ -693,7 +693,7 @@ const IncomeTab = ({ incomeAnalysis, selectedMonthIncome }: { incomeAnalysis: an
         </Card>
       </div>
 
-      <Card>
+      <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-green-500">
         <CardHeader>
           <CardTitle>Income Trend</CardTitle>
           <CardDescription>Monthly income over the last 6 months</CardDescription>
@@ -724,7 +724,7 @@ const IncomeTab = ({ incomeAnalysis, selectedMonthIncome }: { incomeAnalysis: an
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-green-500">
         <CardHeader>
           <CardTitle>All Income Sources</CardTitle>
           <CardDescription>Complete breakdown of income by category</CardDescription>
@@ -786,7 +786,7 @@ const ExpenseTab = ({ expenseAnalysis, selectedMonthExpenses }: { expenseAnalysi
   return (
     <TabsContent value="expenses" className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-red-500">
           <CardHeader>
             <CardTitle>Spending by Category</CardTitle>
             <CardDescription>Where your money goes</CardDescription>
@@ -822,7 +822,7 @@ const ExpenseTab = ({ expenseAnalysis, selectedMonthExpenses }: { expenseAnalysi
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-red-500">
           <CardHeader>
             <CardTitle>Daily Spending Pattern</CardTitle>
             <CardDescription>Your spending throughout the month</CardDescription>
@@ -862,7 +862,7 @@ const ExpenseTab = ({ expenseAnalysis, selectedMonthExpenses }: { expenseAnalysi
         </Card>
       </div>
 
-      <Card>
+      <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-red-500">
         <CardHeader>
           <CardTitle>Expense Trend</CardTitle>
           <CardDescription>Monthly expenses over the last 6 months</CardDescription>
@@ -893,7 +893,7 @@ const ExpenseTab = ({ expenseAnalysis, selectedMonthExpenses }: { expenseAnalysi
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-red-500">
         <CardHeader>
           <CardTitle>All Expense Categories</CardTitle>
           <CardDescription>Complete breakdown of spending by category</CardDescription>
@@ -956,12 +956,12 @@ const ExpenseTab = ({ expenseAnalysis, selectedMonthExpenses }: { expenseAnalysi
 const LoadingSkeleton = () => (
   <div className="space-y-6">
     <div>
-      <h1 className="text-3xl font-bold mb-2">Analysis</h1>
-      <p className="text-muted-foreground">Detailed insights into your financial data</p>
+      <h1 className="text-2xl sm:text-3xl font-bold mb-2">Analysis</h1>
+      <p className="text-sm sm:text-base text-muted-foreground">Detailed insights into your financial data</p>
     </div>
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {Array.from({ length: 4 }, (_, i) => `analysis-loading-skeleton-${i}`).map((key) => (
-        <Card key={key}>
+      {Array.from({ length: 4 }, (_, i) => `analysis-loading-skeleton-${i}`).map((key, i) => (
+        <Card key={key} className={`hover:shadow-md transition-all duration-200 border-l-4 ${i === 0 ? 'border-l-green-500' : i === 1 ? 'border-l-red-500' : i === 2 ? 'border-l-green-500' : 'border-l-blue-500'}`}>
           <CardHeader className="pb-3">
             <div className="animate-pulse space-y-2">
               <div className="h-4 bg-muted rounded w-3/4"></div>
@@ -973,7 +973,7 @@ const LoadingSkeleton = () => (
     </div>
     <div className="grid gap-4 md:grid-cols-2">
       {Array.from({ length: 2 }, (_, i) => `analysis-chart-skeleton-${i}`).map((key) => (
-        <Card key={key}>
+        <Card key={key} className="hover:shadow-md transition-all duration-200 border-l-4 border-l-primary">
           <CardHeader>
             <div className="animate-pulse space-y-2">
               <div className="h-5 bg-muted rounded w-1/3"></div>
@@ -1047,7 +1047,7 @@ export const AnalysisDashboard = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Financial Analysis</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Financial Analysis</h1>
         </div>
 
         <MonthSelector {...monthSelector} />

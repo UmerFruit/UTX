@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
 interface AddExpenseFormProps {
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 export const AddExpenseForm = ({ onSuccess }: AddExpenseFormProps) => {
@@ -78,7 +78,7 @@ export const AddExpenseForm = ({ onSuccess }: AddExpenseFormProps) => {
           description: '',
         });
 
-        onSuccess();
+        onSuccess?.();
       }
     } catch (error) {
       toast({
@@ -145,9 +145,6 @@ export const AddExpenseForm = ({ onSuccess }: AddExpenseFormProps) => {
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onSuccess}>
-          Cancel
-        </Button>
         <Button type="submit" disabled={loading}>
           {loading ? (
             <>
