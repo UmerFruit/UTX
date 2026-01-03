@@ -6,16 +6,12 @@ import { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { IncomeManager } from '@/components/IncomeManager';
-import { Button } from '@/components/ui/button';
-import { Plus,Loader2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AddIncomeForm } from '@/components/AddIncomeForm';
+import { Loader2 } from 'lucide-react';
 
 const Income = () => {
   const { user, loading } = useAuth();
   const { income } = useIncome();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showAddIncome, setShowAddIncome] = useState(false);
 
   if (loading) {
     return (
@@ -29,10 +25,6 @@ const Income = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  const handleIncomeAdded = () => {
-    setShowAddIncome(false);
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Navigation onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
@@ -42,23 +34,6 @@ const Income = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Income</h1>
-              </div>
-              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                <Dialog open={showAddIncome} onOpenChange={setShowAddIncome}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="flex-1 sm:flex-none">
-                      <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                      <span className="hidden xs:inline">Add Income</span>
-                      <span className="xs:hidden">Add</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Add New Income</DialogTitle>
-                    </DialogHeader>
-                    <AddIncomeForm onSuccess={handleIncomeAdded} />
-                  </DialogContent>
-                </Dialog>
               </div>
             </div>
 
