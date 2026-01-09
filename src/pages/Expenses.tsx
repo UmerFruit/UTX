@@ -6,16 +6,12 @@ import { Sidebar } from '@/components/Sidebar';
 import { useExpenses } from '@/hooks/useExpenses';
 import { Card, CardContent} from '@/components/ui/card';
 import { ExpenseList } from '@/components/ExpenseList';
-import { Button } from '@/components/ui/button';
-import { Plus, Loader2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AddExpenseForm } from '@/components/AddExpenseForm';
+import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 const Expenses = () => {
   const { user, loading: authLoading } = useAuth();
   const { expenses, categories, loading: expensesLoading } = useExpenses();
-  const [showAddExpense, setShowAddExpense] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (authLoading) {
@@ -29,10 +25,6 @@ const Expenses = () => {
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-
-  const handleExpenseAdded = () => {
-    setShowAddExpense(false);
-  };
 
   if (expensesLoading) {
     return (
@@ -68,25 +60,6 @@ const Expenses = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Expenses</h1>
-              </div>
-              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                <Dialog open={showAddExpense} onOpenChange={setShowAddExpense}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="flex-1 sm:flex-none">
-                      <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                      <span className="hidden xs:inline">Add Expense</span>
-                      <span className="xs:hidden">Add</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Add New Expense</DialogTitle>
-                    </DialogHeader>
-                    <AddExpenseForm
-                      onSuccess={handleExpenseAdded}
-                    />
-                  </DialogContent>
-                </Dialog>
               </div>
             </div>
 

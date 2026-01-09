@@ -12,6 +12,8 @@ const Expenses = lazy(() => import("./pages/Expenses"));
 const Income = lazy(() => import("./pages/Income"));
 const Analysis = lazy(() => import("./pages/Analysis"));
 const Categories = lazy(() => import("./pages/Categories"));
+const Budgets = lazy(() => import("./pages/Budgets"));
+const BudgetSetup = lazy(() => import("./pages/BudgetSetup"));
 const Loans = lazy(() => import("./pages/Loans"));
 const Import = lazy(() => import("./pages/Import"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -39,6 +41,8 @@ const App = () => (
               <Route path="/income" element={<Income />} />
               <Route path="/analysis" element={<Analysis />} />
               <Route path="/categories" element={<Categories />} />
+              <Route path="/budgets" element={<Budgets />} />
+              <Route path="/budgets/setup" element={<BudgetSetup />} />
               <Route path="/loans" element={<Loans />} />
               <Route path="/import" element={<Import />} />
               <Route path="/auth" element={<Auth />} />

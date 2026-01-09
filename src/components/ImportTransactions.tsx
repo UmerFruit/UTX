@@ -19,9 +19,7 @@ import { formatCurrency } from '@/utils/dateUtils';
 import { Upload, FileText, Loader2, CheckCircle2, XCircle, AlertCircle, Trash2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-interface ImportTransactionsProps {
-  // No props needed - TanStack Query handles data updates automatically
-}
+// No props interface needed - component doesn't accept props
 
 interface PreviewTransaction extends ImportTransaction {
   id: string;
@@ -175,6 +173,7 @@ export const ImportTransactions = () => {
     return selectedTransactions;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const importBatch = async (records: any[], tableName: 'expenses' | 'income', totalTransactions: number, processedRef: { current: number }) => {
     let successCount = 0;
     let failCount = 0;

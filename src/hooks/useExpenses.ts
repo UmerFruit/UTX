@@ -164,6 +164,8 @@ export function useExpenses() {
     onSettled: () => {
       if (!user) return;
       queryClient.invalidateQueries({ queryKey: expensesKeys.byUser(user.id) });
+      // Invalidate budget queries since expenses affect budget calculations
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
     },
   });
 
@@ -216,6 +218,11 @@ export function useExpenses() {
         old.map(exp => exp.id === data.id ? data : exp)
       );
     },
+    onSettled: () => {
+      if (!user) return;
+      // Invalidate budget queries since expenses affect budget calculations
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+    },
   });
 
   // Delete expense mutation
@@ -249,6 +256,11 @@ export function useExpenses() {
       const queryKey = expensesKeys.byUser(user.id);
       queryClient.setQueryData(queryKey, context.previousExpenses);
       console.error('Failed to delete expense:', err);
+    },
+    onSettled: () => {
+      if (!user) return;
+      // Invalidate budget queries since expenses affect budget calculations
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
     },
   });
 

@@ -1,14 +1,17 @@
 // Expense list component for UTX
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { formatDate, formatCurrency } from '@/utils/dateUtils';
 import { Expense, Category,useExpenses } from '@/hooks/useExpenses';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Edit, Trash2, ChevronLeft, ChevronRight, Search, X, Filter } from 'lucide-react';
 import { EditExpenseForm } from './EditExpenseForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConfirmDialog } from './ConfirmDialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card } from '@/components/ui/card';
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -26,15 +29,69 @@ export const ExpenseList = ({ expenses, categories }: ExpenseListProps) => {
     expense: null,
   });
 
-  // Calculate pagination
-  const totalPages = Math.ceil(expenses.length / itemsPerPage);
+  // Filter and search state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [minAmount, setMinAmount] = useState('');
+  const [maxAmount, setMaxAmount] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filter expenses based on all criteria
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter((expense) => {
+      // Search filter (description or notes)
+      const matchesSearch = !searchTerm || 
+        (expense.description?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      // Category filter
+      const matchesCategory = selectedCategories.length === 0 || 
+        (expense.category_id && selectedCategories.includes(expense.category_id));
+
+      // Date range filter
+      const expenseDate = new Date(expense.date);
+      const matchesStartDate = !startDate || expenseDate >= new Date(startDate);
+      const matchesEndDate = !endDate || expenseDate <= new Date(endDate);
+
+      // Amount range filter
+      const matchesMinAmount = !minAmount || expense.amount >= Number.parseFloat(minAmount);
+      const matchesMaxAmount = !maxAmount || expense.amount <= Number.parseFloat(maxAmount);
+
+      return matchesSearch && matchesCategory && matchesStartDate && matchesEndDate && matchesMinAmount && matchesMaxAmount;
+    });
+  }, [expenses, searchTerm, selectedCategories, startDate, endDate, minAmount, maxAmount]);
+
+  // Calculate pagination based on filtered results
+  const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedExpenses = expenses.slice(startIndex, endIndex);
+  const paginatedExpenses = filteredExpenses.slice(startIndex, endIndex);
 
-  // Reset to page 1 when items per page changes
+  // Reset to page 1 when items per page changes or filters change
   const handleItemsPerPageChange = (value: string) => {
     setItemsPerPage(Number.parseInt(value));
+    setCurrentPage(1);
+  };
+
+  // Reset all filters
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategories([]);
+    setStartDate('');
+    setEndDate('');
+    setMinAmount('');
+    setMaxAmount('');
+    setCurrentPage(1);
+  };
+
+  // Toggle category selection
+  const toggleCategory = (categoryId: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(categoryId) 
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
     setCurrentPage(1);
   };
 
@@ -70,8 +127,178 @@ export const ExpenseList = ({ expenses, categories }: ExpenseListProps) => {
     );
   }
 
+  const hasActiveFilters = searchTerm || selectedCategories.length > 0 || startDate || endDate || minAmount || maxAmount;
+
   return (
     <>
+      {/* Search and Filter Section */}
+      <Card className="p-4 space-y-4">
+        {/* Search Bar */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search expenses by description..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-9"
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                onClick={() => {
+                  setSearchTerm('');
+                  setCurrentPage(1);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant={showFilters ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex-shrink-0"
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="flex-shrink-0"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Clear
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Filter Controls */}
+        {showFilters && (
+          <div className="space-y-4 pt-4 border-t">
+            {/* Category Filter */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Categories</Label>
+              <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => toggleCategory(category.id)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer ${
+                      selectedCategories.includes(category.id)
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                    }`}
+                  >
+                    <div
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: selectedCategories.includes(category.id) ? 'currentColor' : category.color }}
+                    />
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Date Range Filter */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="start-date" className="text-sm font-medium mb-2 block">
+                  Start Date
+                </Label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+              <div>
+                <Label htmlFor="end-date" className="text-sm font-medium mb-2 block">
+                  End Date
+                </Label>
+                <Input
+                  id="end-date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Amount Range Filter */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="min-amount" className="text-sm font-medium mb-2 block">
+                  Min Amount
+                </Label>
+                <Input
+                  id="min-amount"
+                  type="number"
+                  placeholder="0"
+                  value={minAmount}
+                  onChange={(e) => {
+                    setMinAmount(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <Label htmlFor="max-amount" className="text-sm font-medium mb-2 block">
+                  Max Amount
+                </Label>
+                <Input
+                  id="max-amount"
+                  type="number"
+                  placeholder="0"
+                  value={maxAmount}
+                  onChange={(e) => {
+                    setMaxAmount(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Results Summary */}
+        {hasActiveFilters && (
+          <div className="text-sm text-muted-foreground">
+            Showing {filteredExpenses.length} of {expenses.length} expenses
+          </div>
+        )}
+      </Card>
+
+      {/* Expense List */}
+      {filteredExpenses.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No expenses match your filters</p>
+          <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filters</p>
+        </div>
+      ) : (
+        <>
       <div className="space-y-3">
         {paginatedExpenses.map((expense) => (
           <div
@@ -124,7 +351,7 @@ export const ExpenseList = ({ expenses, categories }: ExpenseListProps) => {
       </div>
 
       {/* Pagination Controls */}
-      {expenses.length > 0 && (
+      {filteredExpenses.length > 0 && (
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Show</span>
@@ -144,7 +371,7 @@ export const ExpenseList = ({ expenses, categories }: ExpenseListProps) => {
 
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              {startIndex + 1}-{Math.min(endIndex, expenses.length)} of {expenses.length}
+              {startIndex + 1}-{Math.min(endIndex, filteredExpenses.length)} of {filteredExpenses.length}
             </span>
             <div className="flex gap-1">
               <Button
@@ -166,6 +393,8 @@ export const ExpenseList = ({ expenses, categories }: ExpenseListProps) => {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
 
       <Dialog open={!!editingExpense} onOpenChange={() => setEditingExpense(null)}>
