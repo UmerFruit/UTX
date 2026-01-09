@@ -64,6 +64,7 @@ const CHART_COLORS = [
 const INCOME_COLORS = ['#10B981', '#34D399', '#6EE7B7', '#A7F3D0', '#D1FAE5'];
 const EXPENSE_COLORS = ['#EF4444', '#F87171', '#FCA5A5', '#FECACA', '#FEE2E2'];
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Custom tooltip components for charts
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) => {
   if (active && payload?.length) {
@@ -1089,4 +1090,4 @@ export const AnalysisDashboard = () => {
       </Tabs>
     </div>
   );
-};
+};  

@@ -1,4 +1,4 @@
-// Date utility functions for UTX
+ // Date utility functions for UTX
 import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 
 export const formatDate = (date: string | Date) => {

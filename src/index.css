@@ -123,6 +123,18 @@ All colors MUST be HSL format for proper theming.
   }
 }
 
+/* Hide number input spinner arrows */
+input[type="number"] {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* Mobile-specific optimizations */
 @media (max-width: 640px) {
   .container {
@@ -139,34 +151,39 @@ All colors MUST be HSL format for proper theming.
 /* Custom scrollbar styling for dialogs and dropdowns */
 [role="dialog"],
 [role="listbox"],
-[data-radix-popper-content-wrapper] {
+[data-radix-popper-content-wrapper],
+.themed-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
 }
 
 [role="dialog"]::-webkit-scrollbar,
 [role="listbox"]::-webkit-scrollbar,
-[data-radix-popper-content-wrapper]::-webkit-scrollbar {
+[data-radix-popper-content-wrapper]::-webkit-scrollbar,
+.themed-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 [role="dialog"]::-webkit-scrollbar-track,
 [role="listbox"]::-webkit-scrollbar-track,
-[data-radix-popper-content-wrapper]::-webkit-scrollbar-track {
+[data-radix-popper-content-wrapper]::-webkit-scrollbar-track,
+.themed-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 
 [role="dialog"]::-webkit-scrollbar-thumb,
 [role="listbox"]::-webkit-scrollbar-thumb,
-[data-radix-popper-content-wrapper]::-webkit-scrollbar-thumb {
+[data-radix-popper-content-wrapper]::-webkit-scrollbar-thumb,
+.themed-scrollbar::-webkit-scrollbar-thumb {
   background-color: hsl(var(--muted-foreground) / 0.3);
   border-radius: 3px;
 }
 
 [role="dialog"]::-webkit-scrollbar-thumb:hover,
 [role="listbox"]::-webkit-scrollbar-thumb:hover,
-[data-radix-popper-content-wrapper]::-webkit-scrollbar-thumb:hover {
+[data-radix-popper-content-wrapper]::-webkit-scrollbar-thumb:hover,
+.themed-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: hsl(var(--muted-foreground) / 0.5);
 }
 

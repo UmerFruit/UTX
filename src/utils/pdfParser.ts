@@ -164,7 +164,7 @@ export async function parseStatement(pdfText: string): Promise<ParseResult> {
   
   // Step 3: Parse transactions (basic extraction)
   console.log(` Parsing ${detectedBank.parser.name} statement...`);
-  let transactions = detectedBank.parser.parse(pdfText);
+  const transactions = detectedBank.parser.parse(pdfText);
   console.log(` Parsed ${transactions.length} transactions`);
   
   // Step 5: Validate transactions

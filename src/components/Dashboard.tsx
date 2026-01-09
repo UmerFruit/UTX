@@ -2,19 +2,30 @@
 import { useState, useMemo } from 'react';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useIncome } from '@/hooks/useIncome';
+import { useBudgetData } from '@/hooks/useBudgetData';
 import { getCurrentMonthRange, isExpenseInRange, formatCurrency } from '@/utils/dateUtils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Target } from 'lucide-react';
 import { ExpenseList } from './ExpenseList';
 import { AddExpenseForm } from './AddExpenseForm';
 import { AddIncomeForm } from './AddIncomeForm';
 import { ExpenseChart } from './ExpenseChart';
 import { LoansSummary } from './LoansSummary';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Link } from 'react-router-dom';
 
 export const Dashboard = () => {
   const { expenses, categories, loading } = useExpenses();
   const { income } = useIncome();
+  
+  // Get current month and year for budget data
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1; // getMonth() returns 0-11, we need 1-12
+  const currentYear = now.getFullYear();
+  
+  const { summary, budgets } = useBudgetData({ month: currentMonth, year: currentYear });
+  const availableToday = summary?.availableToday ?? 0;
+  
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showAddIncome, setShowAddIncome] = useState(false);
 
@@ -108,6 +119,40 @@ export const Dashboard = () => {
             </DialogContent>
           </Dialog>
 
+          {budgets && budgets.length > 0 ? (
+            <Link to="/budgets" className="xs:col-span-2 lg:col-span-1">
+              <Card className="shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 h-full">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                  <CardTitle className="text-sm sm:text-base font-semibold">Available Today</CardTitle>
+                  <Target className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-xl sm:text-3xl font-bold text-blue-600">{formatCurrency(availableToday)}</div>
+                  </div>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Daily budget
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          ) : (
+            <Card className={`xs:col-span-2 lg:col-span-1 shadow-sm hover:shadow-md transition-all duration-200 border-l-4 ${netMonthlyFlow >= 0 ? 'border-l-green-500 hover:bg-green-50/50 dark:hover:bg-green-950/20' : 'border-l-red-500 hover:bg-red-50/50 dark:hover:bg-red-950/20'}`}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm sm:text-base font-semibold">Net Cash Flow</CardTitle>
+                <DollarSign className={`h-4 w-4 sm:h-5 sm:w-5 ${netMonthlyFlow >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className={`text-xl sm:text-3xl font-bold mb-1 ${netMonthlyFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {netMonthlyFlow >= 0 ? '+' : ''}{formatCurrency(netMonthlyFlow)}
+                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  This month
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           <Dialog open={showAddIncome} onOpenChange={setShowAddIncome}>
             <DialogTrigger asChild>
               <Card className="xs:col-span-2 lg:col-span-1 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border-l-4 border-l-green-500 hover:bg-green-50/50 dark:hover:bg-green-950/20">
@@ -136,20 +181,6 @@ export const Dashboard = () => {
             </DialogContent>
           </Dialog>
 
-          <Card className={`xs:col-span-2 lg:col-span-1 shadow-sm hover:shadow-md transition-all duration-200 border-l-4 ${netMonthlyFlow >= 0 ? 'border-l-green-500 hover:bg-green-50/50 dark:hover:bg-green-950/20' : 'border-l-red-500 hover:bg-red-50/50 dark:hover:bg-red-950/20'}`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm sm:text-base font-semibold">Net Cash Flow</CardTitle>
-              <DollarSign className={`h-4 w-4 sm:h-5 sm:w-5 ${netMonthlyFlow >= 0 ? 'text-green-600' : 'text-red-600'}`} />
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className={`text-xl sm:text-3xl font-bold mb-1 ${netMonthlyFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {netMonthlyFlow >= 0 ? '+' : ''}{formatCurrency(netMonthlyFlow)}
-              </div>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                This month
-              </p>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Main Content */}

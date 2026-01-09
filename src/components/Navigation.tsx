@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { DollarSign, LogOut, User, Menu, Trash2, LayoutDashboard, ChartNoAxesCombined, HandCoins   } from 'lucide-react';
+import { DollarSign, LogOut, User, Menu, Trash2, LayoutDashboard, ChartNoAxesCombined, HandCoins, Target } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,8 +39,9 @@ export const Navigation = ({ onMenuToggle }: NavigationProps) => {
 
   const navItems = [
     { title: 'Dashboard', href: '/', icon: LayoutDashboard },
-    {title: 'Analysis', href: '/analysis', icon: ChartNoAxesCombined},
-    {title: 'Loans', href: '/loans', icon: HandCoins}
+    { title: 'Budgets', href: '/budgets', icon: Target },
+    { title: 'Analysis', href: '/analysis', icon: ChartNoAxesCombined },
+    { title: 'Loans', href: '/loans', icon: HandCoins }
   ];
 
   const handleSignOut = async () => {
@@ -76,10 +77,10 @@ export const Navigation = ({ onMenuToggle }: NavigationProps) => {
 
       // Sign out after deletion
       await signOut();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Failed to delete account",
+        description: error instanceof Error ? error.message : "Failed to delete account",
         variant: "destructive",
       });
     } finally {
