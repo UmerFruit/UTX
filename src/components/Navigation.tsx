@@ -38,7 +38,7 @@ export const Navigation = ({ onMenuToggle }: NavigationProps) => {
   const navigate = useNavigate();
 
   const navItems = [
-    { title: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { title: 'Budgets', href: '/budgets', icon: Target },
     { title: 'Analysis', href: '/analysis', icon: ChartNoAxesCombined },
     { title: 'Loans', href: '/loans', icon: HandCoins }
@@ -52,9 +52,9 @@ export const Navigation = ({ onMenuToggle }: NavigationProps) => {
       description: "You have been signed out successfully",
     });
 
-    // Navigate to auth page after a brief delay to ensure state updates
+    // Navigate to landing page after a brief delay to ensure state updates
     setTimeout(() => {
-      navigate('/auth', { replace: true });
+      navigate('/', { replace: true });
     }, 100);
   };
 
@@ -105,7 +105,7 @@ export const Navigation = ({ onMenuToggle }: NavigationProps) => {
             </Button>
           )}
           <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-          <Link to="/" className="text-lg sm:text-xl font-bold text-primary hover:text-primary/80 transition-colors">
+          <Link to="/dashboard" className="text-lg sm:text-xl font-bold text-primary hover:text-primary/80 transition-colors">
             UTX
           </Link>
         </div>
