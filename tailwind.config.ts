@@ -82,7 +82,18 @@ export default {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
-			}
+			},
+			keyframes: {
+				'landing-float': {
+					'0%, 100%': { transform: 'translate(0, 0) scale(1)', opacity: '0' },
+					'10%': { opacity: '1' },
+					'90%': { opacity: '1' },
+					'100%': { transform: 'translate(100px, -800px) scale(0)', opacity: '0' },
+				},
+			},
+			animation: {
+				'landing-float': 'landing-float 15s infinite ease-in-out',
+			},
 		}
 	},
 	plugins: [tailwindcssAnimate, tailwindScrollbar],

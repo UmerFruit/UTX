@@ -7,6 +7,7 @@ import { Suspense, lazy } from "react";
 import { Loader2 } from "lucide-react";
 
 // Lazy load pages for code splitting
+const Landing = lazy(() => import("./pages/Landing"));
 const Index = lazy(() => import("./pages/Index"));
 const Expenses = lazy(() => import("./pages/Expenses"));
 const Income = lazy(() => import("./pages/Income"));
@@ -36,7 +37,8 @@ const App = () => (
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Landing />} />
+              <Route path="/dashboard" element={<Index />} />
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/income" element={<Income />} />
               <Route path="/analysis" element={<Analysis />} />

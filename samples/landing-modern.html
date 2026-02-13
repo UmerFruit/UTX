@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTX - Track Your Expenses</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'hsl(262, 83%, 58%)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        #canvas-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+        }
+
+        #three-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Floating particles background */
+        .particle-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .floating-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(139, 92, 246, 0.3);
+            border-radius: 50%;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translate(100px, -800px) scale(0); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white" style="font-family: 'Inter', sans-serif;">
+    <!-- Header -->
+    <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-50 backdrop-blur-sm bg-gray-900/90">
+        <nav class="container mx-auto px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="32" height="32" rx="8" fill="url(#gradient)"/>
+                    <path d="M16 8L8 12V20L16 24L24 20V12L16 8Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M16 16L20 14M16 16L12 14M16 16V20" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="hsl(262, 83%, 58%)"/>
+                            <stop offset="1" stop-color="hsl(262, 83%, 45%)"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span class="text-xl font-bold text-white">UTX</span>
+            </div>
+            <div class="flex items-center gap-8">
+                <a href="#features" class="text-sm font-medium text-gray-400 hover:text-white transition">Features</a>
+                <a href="#how-it-works" class="text-sm font-medium text-gray-400 hover:text-white transition">How it works</a>
+                <a href="/auth" class="bg-purple-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-purple-700 transition">Get Started</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <main class="container mx-auto px-8 pt-20 pb-16 relative">
+        <!-- Floating Particles Background -->
+        <div class="particle-bg">
+            <div class="floating-particle" style="left: 10%; animation-delay: 0s;"></div>
+            <div class="floating-particle" style="left: 20%; animation-delay: 2s;"></div>
+            <div class="floating-particle" style="left: 30%; animation-delay: 4s;"></div>
+            <div class="floating-particle" style="left: 40%; animation-delay: 1s;"></div>
+            <div class="floating-particle" style="left: 50%; animation-delay: 3s;"></div>
+            <div class="floating-particle" style="left: 60%; animation-delay: 5s;"></div>
+            <div class="floating-particle" style="left: 70%; animation-delay: 2.5s;"></div>
+            <div class="floating-particle" style="left: 80%; animation-delay: 4.5s;"></div>
+            <div class="floating-particle" style="left: 90%; animation-delay: 1.5s;"></div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            <div class="relative z-10">
+                <div class="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 px-4 py-2 rounded-full mb-6">
+                    <div class="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                    <span class="text-sm font-medium text-purple-300">Free & Open Source</span>
+                </div>
+                <h1 class="text-5xl font-bold text-white mb-6 leading-tight">
+                    Smart expense tracking for better financial decisions
+                </h1>
+                <p class="text-lg text-gray-400 mb-8 leading-relaxed">
+                    UTX gives you complete visibility into your spending. Track every dollar, set realistic budgets, and understand your financial patterns with powerful analytics.
+                </p>
+                <div class="flex gap-4">
+                    <a href="/auth" class="bg-purple-600 text-white px-7 py-3.5 rounded-lg font-semibold hover:bg-purple-700 transition shadow-lg shadow-purple-600/30">
+                        Start Tracking Now
+                    </a>
+                    <a href="#features" class="border-2 border-gray-700 text-gray-300 px-7 py-3.5 rounded-lg font-semibold hover:border-gray-600 hover:bg-gray-800 transition">
+                        See Features
+                    </a>
+                </div>
+                <div class="flex items-center gap-6 mt-10 text-sm text-gray-500">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-gray-400">No credit card</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-gray-400">Setup in 2 minutes</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 3D DNA Strand Animation with Three.js -->
+            <div id="canvas-container">
+                <canvas id="three-canvas"></canvas>
+            </div>
+        </div>
+
+        <script>
+            // Three.js Scene Setup
+            const container = document.getElementById('canvas-container');
+            const canvas = document.getElementById('three-canvas');
+            
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas, 
+                alpha: true, 
+                antialias: true 
+            });
+            
+            renderer.setSize(container.offsetWidth, container.offsetHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            camera.position.z = 15;
+
+            // DNA Helix Parameters
+            const helixRadius = 3;
+            const helixHeight = 20;
+            const turns = 4;
+            const particlesPerTurn = 18;
+            const totalParticles = turns * particlesPerTurn;
+
+            // Materials
+            const purpleMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x8b5cf6,
+                emissive: 0x8b5cf6,
+                emissiveIntensity: 0.3,
+                shininess: 100
+            });
+            
+            const blueMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x3b82f6,
+                emissive: 0x3b82f6,
+                emissiveIntensity: 0.3,
+                shininess: 100
+            });
+
+            const connectorMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x6366f1,
+                transparent: true,
+                opacity: 0.4
+            });
+
+            // Create DNA Helix
+            const dnaGroup = new THREE.Group();
+            const strand1 = [];
+            const strand2 = [];
+            const connectors = [];
+            const bases1 = [];
+            const bases2 = [];
+
+            // Pre-create materials for bases
+            const baseMaterial1 = new THREE.MeshPhongMaterial({ 
+                color: 0xff6b35, 
+                emissive: 0xff6b35, 
+                emissiveIntensity: 0.3 
+            });
+            const baseMaterial2 = new THREE.MeshPhongMaterial({ 
+                color: 0x4ecdc4, 
+                emissive: 0x4ecdc4, 
+                emissiveIntensity: 0.3 
+            });
+
+            for (let i = 0; i < totalParticles; i++) {
+                const angle = (i / particlesPerTurn) * Math.PI * 2;
+                const y = (i / totalParticles) * helixHeight - helixHeight / 2;
+                
+                // Strand 1 particle
+                const sphere1Geometry = new THREE.SphereGeometry(0.3, 16, 16);
+                const sphere1 = new THREE.Mesh(sphere1Geometry, purpleMaterial);
+                sphere1.position.x = Math.cos(angle) * helixRadius;
+                sphere1.position.z = Math.sin(angle) * helixRadius;
+                sphere1.position.y = y;
+                dnaGroup.add(sphere1);
+                strand1.push(sphere1);
+
+                // Strand 2 particle (opposite side)
+                const sphere2Geometry = new THREE.SphereGeometry(0.3, 16, 16);
+                const sphere2 = new THREE.Mesh(sphere2Geometry, blueMaterial);
+                sphere2.position.x = Math.cos(angle + Math.PI) * helixRadius;
+                sphere2.position.z = Math.sin(angle + Math.PI) * helixRadius;
+                sphere2.position.y = y;
+                dnaGroup.add(sphere2);
+                strand2.push(sphere2);
+
+                // Connector between pairs (every 2nd particle)
+                if (i % 2 === 0) {
+                    const distance = sphere1.position.distanceTo(sphere2.position);
+                    const connectorGeometry = new THREE.CylinderGeometry(0.08, 0.08, distance, 8);
+                    const connector = new THREE.Mesh(connectorGeometry, connectorMaterial);
+                    
+                    // Position connector at midpoint
+                    connector.position.x = (sphere1.position.x + sphere2.position.x) / 2;
+                    connector.position.y = y;
+                    connector.position.z = (sphere1.position.z + sphere2.position.z) / 2;
+                    
+                    // Rotate connector to connect the two spheres
+                    const direction = new THREE.Vector3().subVectors(sphere2.position, sphere1.position);
+                    connector.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+                    
+                    dnaGroup.add(connector);
+                    connectors.push(connector);
+
+                    // Add nucleotide bases
+                    const baseGeometry = new THREE.SphereGeometry(0.15, 8, 8);
+
+                    const base1 = new THREE.Mesh(baseGeometry, baseMaterial1);
+                    base1.position.x = sphere1.position.x + (direction.x * 0.3);
+                    base1.position.y = y + 0.3;
+                    base1.position.z = sphere1.position.z + (direction.z * 0.3);
+                    dnaGroup.add(base1);
+                    bases1.push({ mesh: base1, particleIndex: i });
+
+                    const base2 = new THREE.Mesh(baseGeometry, baseMaterial2);
+                    base2.position.x = sphere2.position.x - (direction.x * 0.3);
+                    base2.position.y = y - 0.3;
+                    base2.position.z = sphere2.position.z - (direction.z * 0.3);
+                    dnaGroup.add(base2);
+                    bases2.push({ mesh: base2, particleIndex: i });
+                }
+            }
+
+            scene.add(dnaGroup);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const pointLight1 = new THREE.PointLight(0x8b5cf6, 1, 100);
+            pointLight1.position.set(10, 10, 10);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(0x3b82f6, 1, 100);
+            pointLight2.position.set(-10, -10, 10);
+            scene.add(pointLight2);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(0, 1, 1);
+            scene.add(directionalLight);
+
+            // Animation
+            let time = 0;
+            
+            // Set fixed slant like "/" - the structure stays tilted but doesn't move
+            dnaGroup.rotation.x = 0;  // Tilt forward ~30 degrees
+            dnaGroup.rotation.z = -Math.PI / 6; // Tilt to the side ~30 degrees (creates "/" look)
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                time += 0.015; // Speed of bead movement
+
+                // Animate each bead along its circular path
+                strand1.forEach((sphere, i) => {
+                    const baseAngle = (i / particlesPerTurn) * Math.PI * 2;
+                    const animatedAngle = baseAngle + time; // Beads travel along the helix
+                    const y = (i / totalParticles) * helixHeight - helixHeight / 2;
+                    
+                    sphere.position.x = Math.cos(animatedAngle) * helixRadius;
+                    sphere.position.z = Math.sin(animatedAngle) * helixRadius;
+                    sphere.position.y = y;
+                    
+                    // Subtle pulse
+                    const scale = 1 + Math.sin(time * 3 + i * 0.2) * 0.1;
+                    sphere.scale.set(scale, scale, scale);
+                });
+
+                strand2.forEach((sphere, i) => {
+                    const baseAngle = (i / particlesPerTurn) * Math.PI * 2 + Math.PI; // Opposite side
+                    const animatedAngle = baseAngle + time;
+                    const y = (i / totalParticles) * helixHeight - helixHeight / 2;
+                    
+                    sphere.position.x = Math.cos(animatedAngle) * helixRadius;
+                    sphere.position.z = Math.sin(animatedAngle) * helixRadius;
+                    sphere.position.y = y;
+                    
+                    // Subtle pulse
+                    const scale = 1 + Math.sin(time * 3 + i * 0.2 + Math.PI) * 0.1;
+                    sphere.scale.set(scale, scale, scale);
+                });
+
+                // Update connectors and bases to follow the beads
+                connectors.forEach((connector, idx) => {
+                    const i = idx * 2; // Connectors are every 2nd particle
+                    if (strand1[i] && strand2[i]) {
+                        const sphere1 = strand1[i];
+                        const sphere2 = strand2[i];
+                        const y = (i / totalParticles) * helixHeight - helixHeight / 2;
+                        
+                        // Position at midpoint
+                        connector.position.x = (sphere1.position.x + sphere2.position.x) / 2;
+                        connector.position.y = y;
+                        connector.position.z = (sphere1.position.z + sphere2.position.z) / 2;
+                        
+                        // Rotate to connect the two spheres
+                        const direction = new THREE.Vector3().subVectors(sphere2.position, sphere1.position);
+                        const normalizedDir = direction.clone().normalize();
+                        connector.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normalizedDir);
+                        
+                        // Update bases positions
+                        if (bases1[idx] && bases2[idx]) {
+                            bases1[idx].mesh.position.x = sphere1.position.x + (normalizedDir.x * 0.8);
+                            bases1[idx].mesh.position.y = y;
+                            bases1[idx].mesh.position.z = sphere1.position.z + (normalizedDir.z * 0.8);
+                            
+                            bases2[idx].mesh.position.x = sphere2.position.x - (normalizedDir.x * 0.8);
+                            bases2[idx].mesh.position.y = y;
+                            bases2[idx].mesh.position.z = sphere2.position.z - (normalizedDir.z * 0.8);
+                        }
+                    }
+                });
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                const width = container.offsetWidth;
+                const height = container.offsetHeight;
+                
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, height);
+            });
+        </script>
+
+        <!-- Features Grid -->
+        <div id="features" class="mt-32 max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-white mb-4">Everything you need to manage your money</h2>
+                <p class="text-lg text-gray-400">Powerful features designed to give you complete financial clarity</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="group bg-gray-800 p-8 rounded-xl border border-gray-700 hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 transition">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Visual Analytics</h3>
+                    <p class="text-gray-400 leading-relaxed">Interactive charts show spending trends, category breakdowns, and monthly comparisons at a glance.</p>
+                </div>
+
+                <div class="group bg-gray-800 p-8 rounded-xl border border-gray-700 hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 transition">
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Smart Budgets</h3>
+                    <p class="text-gray-400 leading-relaxed">Set category limits, track progress in real-time, and get notified before you overspend.</p>
+                </div>
+
+                <div class="group bg-gray-800 p-8 rounded-xl border border-gray-700 hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 transition">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">CSV Import/Export</h3>
+                    <p class="text-gray-400 leading-relaxed">Bulk import transactions from bank statements and export your data anytime you need it.</p>
+                </div>
+
+                <div class="group bg-gray-800 p-8 rounded-xl border border-gray-700 hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 transition">
+                    <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Custom Categories</h3>
+                    <p class="text-gray-400 leading-relaxed">Organize expenses your way with flexible categories and tags that match your lifestyle.</p>
+                </div>
+
+                <div class="group bg-gray-800 p-8 rounded-xl border border-gray-700 hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 transition">
+                    <div class="w-12 h-12 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Loan Tracking</h3>
+                    <p class="text-gray-400 leading-relaxed">Monitor borrowed and lent money, track repayments, and never lose track of IOUs.</p>
+                </div>
+
+                <div class="group bg-gray-800 p-8 rounded-xl border border-gray-700 hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 transition">
+                    <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Private & Secure</h3>
+                    <p class="text-gray-400 leading-relaxed">Your financial data is encrypted and stored securely. Only you have access to your information.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- How It Works -->
+        <div id="how-it-works" class="mt-32 max-w-5xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-white mb-4">Start tracking in minutes</h2>
+                <p class="text-lg text-gray-400">Simple setup, powerful results</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-purple-500/20 border border-purple-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-purple-400">1</span>
+                    </div>
+                    <h3 class="font-semibold text-white mb-2">Create Account</h3>
+                    <p class="text-gray-400 text-sm">Sign up with email in under 30 seconds</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-purple-500/20 border border-purple-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-purple-400">2</span>
+                    </div>
+                    <h3 class="font-semibold text-white mb-2">Add Expenses</h3>
+                    <p class="text-gray-400 text-sm">Log transactions manually or import from CSV</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-purple-500/20 border border-purple-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-purple-400">3</span>
+                    </div>
+                    <h3 class="font-semibold text-white mb-2">Get Insights</h3>
+                    <p class="text-gray-400 text-sm">See where your money goes with visual reports</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="mt-32 bg-gradient-to-br from-purple-600 to-purple-800 rounded-3xl p-12 text-center max-w-4xl mx-auto border border-purple-500/30">
+            <h2 class="text-4xl font-bold text-white mb-4">Ready to take control?</h2>
+            <p class="text-xl text-purple-100 mb-8">Join and start making smarter financial decisions today</p>
+            <a href="/auth" class="inline-block bg-white text-purple-700 px-10 py-4 rounded-lg font-bold hover:bg-gray-100 transition shadow-xl">
+                Create Your Free Account
+            </a>
+            <p class="text-purple-200 text-sm mt-6">Free forever • No credit card required</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-8 py-12 mt-32 border-t border-gray-800">
+        <div class="flex justify-between items-center max-w-6xl mx-auto">
+            <div class="flex items-center gap-2">
+                <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="32" height="32" rx="8" fill="url(#gradient2)"/>
+                    <path d="M16 8L8 12V20L16 24L24 20V12L16 8Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M16 16L20 14M16 16L12 14M16 16V20" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs>
+                        <linearGradient id="gradient2" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="hsl(262, 83%, 58%)"/>
+                            <stop offset="1" stop-color="hsl(262, 83%, 45%)"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span class="font-semibold text-white">UTX</span>
+            </div>
+            <p class="text-sm text-gray-500">&copy; 2026 UTX. Built for better money management.</p>
+        </div>
+    </footer>
+</body>
+</html>
