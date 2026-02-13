@@ -53,12 +53,7 @@ const Landing = () => {
             <span className="text-xl font-bold text-white">UTX</span>
           </div>
           <div className="flex items-center gap-8">
-            <a href="#features" className="text-sm font-medium text-gray-400 hover:text-white transition">
-              Features
-            </a>
-            <a href="#how-it-works" className="text-sm font-medium text-gray-400 hover:text-white transition">
-              How it works
-            </a>
+            
             <Link
               to="/auth"
               className="bg-purple-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-purple-700 transition"
